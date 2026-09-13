@@ -14,17 +14,17 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata = {
-  title: "Utoor Ateazami | Pure Artisanal Attars & Luxury Fragrances",
-  description: "Explore Utoor Ateazami's exclusive collection of pure non-alcoholic concentrated perfume oils, authentic Hindi ouds, and signature gift sets.",
+  title: "Utoorat e Azami | Pure Artisanal Attars & Luxury Fragrances",
+  description: "Explore Utoorat e Azami's exclusive collection of pure non-alcoholic concentrated perfume oils, authentic Hindi ouds, and signature gift sets.",
   keywords: "utoorateazami, attar, pure perfume oil, oud, pakistani perfumes, non-alcoholic fragrance, oriental attar",
   openGraph: {
-    title: "Utoor Ateazami | Artisanal Attar & Luxury Fragrance",
+    title: "Utoorat e Azami | Artisanal Attar & Luxury Fragrance",
     description: "Timeless Collections For Essence Enthusiasts. 100% Pure Non-Alcoholic Attars.",
     url: "https://utoorateazami.com",
-    siteName: "Utoor Ateazami",
+    siteName: "Utoorat e Azami",
     images: [
       {
-        url: "https://utoorateazami.com/wp-content/uploads/2025/01/5.jpg",
+        url: "/hero/hero_slide_1.jpg",
         width: 1200,
         height: 630,
       },

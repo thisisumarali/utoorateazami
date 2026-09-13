@@ -50,7 +50,7 @@ export default function CartDrawer({
       .map((item, idx) => `${idx + 1}. ${item.name} (${item.size}) x${item.quantity} - Rs${(item.price * item.quantity).toLocaleString()}`)
       .join("\n");
     const addressDetails = customerInfo.name ? `\n\n*Customer Details:*\nName: ${customerInfo.name}\nPhone: ${customerInfo.phone}\nCity: ${customerInfo.city}\nAddress: ${customerInfo.address}` : "";
-    const msg = `*NEW ORDER - UTOOR ATEAZAMI*\n-------------------------\n${itemList}\n-------------------------\n*Subtotal:* Rs${subtotal.toLocaleString()}\n*Shipping:* ${freeShipping ? "FREE" : "Rs250"}\n*Total:* Rs${grandTotal.toLocaleString()}${addressDetails}\n\nPlease confirm availability and payment options!`;
+    const msg = `*NEW ORDER - Utoorat e Azami*\n-------------------------\n${itemList}\n-------------------------\n*Subtotal:* Rs${subtotal.toLocaleString()}\n*Shipping:* ${freeShipping ? "FREE" : "Rs250"}\n*Total:* Rs${grandTotal.toLocaleString()}${addressDetails}\n\nPlease confirm availability and payment options!`;
     const encoded = encodeURIComponent(msg);
     window.open(`https://wa.me/${SITE_CONFIG.whatsappNumber}?text=${encoded}`, "_blank");
   };
@@ -99,9 +99,8 @@ export default function CartDrawer({
             </div>
             <div className="w-full h-1.5 bg-stone-200 rounded-full overflow-hidden">
               <div
-                className={`h-full transition-all duration-500 rounded-full ${
-                  freeShipping ? "bg-emerald-600" : "bg-[#BC8242]"
-                }`}
+                className={`h-full transition-all duration-500 rounded-full ${freeShipping ? "bg-emerald-600" : "bg-[#BC8242]"
+                  }`}
                 style={{ width: `${progressPercent}%` }}
               />
             </div>

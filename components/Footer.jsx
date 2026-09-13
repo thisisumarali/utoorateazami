@@ -36,7 +36,7 @@ export default function Footer({ onSelectCategory }) {
               </div>
               <div>
                 <span className="font-serif-luxury text-lg font-bold tracking-wider text-stone-900 uppercase block">
-                  UTOOR ATEAZAMI
+                  Utoorat e Azami
                 </span>
                 <span className="text-[10px] tracking-[0.2em] text-[#BC8242] uppercase font-semibold">
                   {SITE_CONFIG.arabicName}
@@ -69,7 +69,7 @@ export default function Footer({ onSelectCategory }) {
             </h4>
             <ul className="space-y-2 text-xs">
               {[
-                { name: "New Releases", id: "new-releases" },
+                { name: "Azamis Special", id: "azamis-special" },
                 { name: "Best Sellers", id: "best-seller" },
                 { name: "Men's Attars", id: "mens" },
                 { name: "Pure Aged Oud", id: "oud" },
@@ -168,7 +168,7 @@ export default function Footer({ onSelectCategory }) {
 
         {/* Bottom bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
-          <p>© {new Date().getFullYear()} Utoor Ateazami (عطور الأعظمي). All Rights Reserved.</p>
+          <p>© {new Date().getFullYear()} Utoorat e Azami (عطور الأعظمي). All Rights Reserved.</p>
           <div className="flex items-center gap-6">
             <a href="#" className="hover:text-stone-900 transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-stone-900 transition-colors">Terms of Service</a>

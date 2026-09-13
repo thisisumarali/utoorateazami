@@ -81,16 +81,16 @@ export default function Home() {
   );
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  // New Releases (4 products for top row like in user screenshot)
-  const newReleases = useMemo(() => {
-    return PRODUCTS.filter((p) => p.tags.includes("new-releases")).slice(0, 4);
+  // Azamis Special (4 spotlight products for top row)
+  const azamisSpecial = useMemo(() => {
+    return PRODUCTS.filter((p) => p.tags.includes("azamis-special")).slice(0, 4);
   }, []);
 
   // Filtered Catalog products
   const filteredCatalog = useMemo(() => {
     if (activeCategory === "all") return PRODUCTS;
-    if (activeCategory === "new-releases") {
-      return PRODUCTS.filter((p) => p.tags.includes("new-releases"));
+    if (activeCategory === "azamis-special") {
+      return PRODUCTS.filter((p) => p.tags.includes("azamis-special"));
     }
     if (activeCategory === "best-seller") {
       return PRODUCTS.filter((p) => p.tags.includes("best-seller"));
@@ -139,14 +139,14 @@ export default function Home() {
         {/* 1. Hero Slider with background images sliding */}
         <HeroSlider onExploreClick={scrollToTarget} />
 
-        {/* 2. NEW RELEASES SECTION - matching user reference image exactly */}
-        <section id="new-releases" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        {/* 2. AZAMIS SPECIAL SECTION */}
+        <section id="azamis-special" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
           {/* Centered Divider Title flanked by thin lines */}
-          <SectionHeader title="NEW RELEASES" />
+          <SectionHeader title="AZAMIS SPECIAL" />
 
           {/* 4 Clean Minimalist Product Cards in a row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-            {newReleases.map((product) => (
+            {azamisSpecial.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}
@@ -181,7 +181,7 @@ export default function Home() {
             {[
               { id: "all", label: "All Fragrances" },
               { id: "best-seller", label: "Best Sellers" },
-              { id: "new-releases", label: "New Releases" },
+              { id: "azamis-special", label: "Azamis Special" },
               { id: "mens", label: "Men's Attars" },
               { id: "oud", label: "Pure Oud" },
               { id: "unisex", label: "Unisex" },
@@ -190,11 +190,10 @@ export default function Home() {
               <button
                 key={tab.id}
                 onClick={() => setActiveCategory(tab.id)}
-                className={`px-4 py-2 rounded-full transition-all duration-200 ${
-                  activeCategory === tab.id
+                className={`px-4 py-2 rounded-full transition-all duration-200 ${activeCategory === tab.id
                     ? "bg-[#BC8242] text-white shadow-sm"
                     : "bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-200"
-                }`}
+                  }`}
               >
                 {tab.label}
               </button>
@@ -306,7 +305,7 @@ export default function Home() {
           </h2>
           <div className="w-16 h-0.5 bg-[#BC8242] mx-auto"></div>
           <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-3xl mx-auto">
-            At Utoor Ateazami, we believe fragrance is an intimate spiritual signature. We shun synthetic dilution, offering 100% non-alcoholic, skin-friendly concentrated perfume oils created through age-old maceration and distillation methods. From rare Hindi Dehn Al Oud to luminous White Musk and exquisite Taif Rose, every drop is an ode to timeless refinement.
+            At Utoorat e Azami, we believe fragrance is an intimate spiritual signature. We shun synthetic dilution, offering 100% non-alcoholic, skin-friendly concentrated perfume oils created through age-old maceration and distillation methods. From rare Hindi Dehn Al Oud to luminous White Musk and exquisite Taif Rose, every drop is an ode to timeless refinement.
           </p>
         </section>
 

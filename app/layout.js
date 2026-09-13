@@ -14,6 +14,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata = {
+  metadataBase: new URL("https://utoorateazami.com"),
   title: "Utoorat e Azami | Pure Artisanal Attars & Luxury Fragrances",
   description: "Explore Utoorat e Azami's exclusive collection of pure non-alcoholic concentrated perfume oils, authentic Hindi ouds, and signature gift sets.",
   keywords: "utoorateazami, attar, pure perfume oil, oud, pakistani perfumes, non-alcoholic fragrance, oriental attar",

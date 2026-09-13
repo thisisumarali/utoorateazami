@@ -140,12 +140,12 @@ export default function Home() {
         <HeroSlider onExploreClick={scrollToTarget} />
 
         {/* 2. AZAMIS SPECIAL SECTION */}
-        <section id="azamis-special" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <section id="azamis-special" className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12">
           {/* Centered Divider Title flanked by thin lines */}
           <SectionHeader title="AZAMIS SPECIAL" />
 
           {/* 4 Clean Minimalist Product Cards in a row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 lg:gap-8">
             {azamisSpecial.map((product) => (
               <ProductCard
                 key={product.id}
@@ -158,7 +158,7 @@ export default function Home() {
         </section>
 
         {/* 3. BROWSE OUR CATEGORIES SECTION - matching user reference divider */}
-        <section id="categories" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 bg-stone-50/50 rounded-xs my-6">
+        <section id="categories" className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12 bg-stone-50/50 rounded-xs my-4 sm:my-6">
           <SectionHeader title="BROWSE OUR CATEGORIES" />
           <CategoryShowcase
             onSelectCategory={(catId) => {
@@ -170,14 +170,14 @@ export default function Home() {
         </section>
 
         {/* 4. FULL CATALOG & BEST SELLERS WITH FILTER TABS */}
-        <section id="catalog-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+        <section id="catalog-section" className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-10 md:py-14">
           <SectionHeader
             title="OUR ARTISANAL COLLECTION"
             subtitle="100% Pure Non-Alcoholic Perfume Oils"
           />
 
           {/* Category Filter Tabs */}
-          <div className="flex items-center justify-center flex-wrap gap-2 mb-10 text-xs font-semibold uppercase tracking-wider">
+          <div className="flex items-center justify-center flex-wrap gap-1.5 sm:gap-2 mb-6 sm:mb-10 text-[11px] sm:text-xs font-semibold uppercase tracking-wider">
             {[
               { id: "all", label: "All Fragrances" },
               { id: "best-seller", label: "Best Sellers" },
@@ -190,10 +190,11 @@ export default function Home() {
               <button
                 key={tab.id}
                 onClick={() => setActiveCategory(tab.id)}
-                className={`px-4 py-2 rounded-full transition-all duration-200 ${activeCategory === tab.id
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-200 ${
+                  activeCategory === tab.id
                     ? "bg-[#BC8242] text-white shadow-sm"
                     : "bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-200"
-                  }`}
+                }`}
               >
                 {tab.label}
               </button>
@@ -201,7 +202,7 @@ export default function Home() {
           </div>
 
           {/* Product Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8">
             {filteredCatalog.map((product) => (
               <ProductCard
                 key={product.id}

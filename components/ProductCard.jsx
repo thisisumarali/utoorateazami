@@ -34,7 +34,7 @@ export default function ProductCard({
 
   return (
     <div
-      className="group flex flex-col bg-transparent cursor-pointer transition-all duration-300"
+      className="group flex flex-col bg-transparent cursor-pointer transition-all duration-300 select-none"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onQuickView(product)}
@@ -43,27 +43,27 @@ export default function ProductCard({
       <div className="relative aspect-square w-full overflow-hidden bg-[#f7f6f2] rounded-xs border border-stone-200/80 transition-shadow group-hover:shadow-md">
         {/* Sale Badge */}
         {product.saleBadge && (
-          <span className="absolute top-2.5 left-2.5 z-20 px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-[#BC8242] text-white rounded-xs shadow-sm">
+          <span className="absolute top-2 left-2 z-20 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] uppercase font-bold tracking-wider bg-[#BC8242] text-white rounded-xs shadow-xs">
             {product.saleBadge}
           </span>
         )}
 
         {/* Product Image with smooth hover scale */}
-        <div className="relative w-full h-full p-4 flex items-center justify-center">
+        <div className="relative w-full h-full p-2 sm:p-4 flex items-center justify-center">
           <Image
             src={product.image}
             alt={product.name}
             fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className={`object-contain transition-transform duration-500 ease-out p-3 ${
+            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 25vw"
+            className={`object-contain transition-transform duration-500 ease-out p-1.5 sm:p-3 ${
               isHovered ? "scale-108" : "scale-100"
             }`}
           />
         </div>
 
-        {/* Quick Action Overlay on Hover */}
+        {/* Desktop Quick Action Overlay on Hover */}
         <div
-          className={`absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-white/95 via-white/80 to-transparent flex flex-col gap-2 transition-all duration-300 ${
+          className={`hidden sm:flex absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-white/95 via-white/80 to-transparent flex-col gap-2 transition-all duration-300 ${
             isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
           }`}
         >
@@ -91,7 +91,7 @@ export default function ProductCard({
             <button
               onClick={handleQuickAdd}
               disabled={addedAnimation}
-              className={`flex-1 py-1.5 px-2 rounded-xs text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all uppercase shadow-sm ${
+              className={`flex-1 py-1.5 px-2 rounded-xs text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all uppercase shadow-xs ${
                 addedAnimation
                   ? "bg-emerald-600 text-white"
                   : "bg-[#BC8242] hover:bg-[#a1682a] text-white"
@@ -123,20 +123,45 @@ export default function ProductCard({
       </div>
 
       {/* Product Details - Simple, Neat, Clean (just like user reference) */}
-      <div className="pt-3 pb-1 text-left">
-        <h3 className="text-sm md:text-base font-serif-luxury font-medium text-stone-900 tracking-wide group-hover:text-[#BC8242] transition-colors line-clamp-1">
+      <div className="pt-2 sm:pt-3 pb-1 text-left">
+        <h3 className="text-xs sm:text-sm md:text-base font-serif-luxury font-medium text-stone-900 tracking-wide group-hover:text-[#BC8242] transition-colors truncate">
           {product.name}
         </h3>
 
-        <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-xs md:text-sm font-semibold text-stone-800 tracking-wider">
-            {product.priceDisplay}
-          </span>
-          {product.originalPrice && (
-            <span className="text-[11px] text-stone-400 line-through">
-              {product.originalPrice}
+        <div className="flex items-baseline justify-between gap-1 mt-0.5 sm:mt-1">
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-stone-800 tracking-wider">
+              {product.priceDisplay}
             </span>
-          )}
+            {product.originalPrice && (
+              <span className="text-[10px] text-stone-400 line-through">
+                {product.originalPrice}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Dedicated Touch Actions (visible on mobile only) */}
+        <div className="mt-2 sm:hidden flex items-center gap-1.5">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onQuickView(product);
+            }}
+            className="flex-1 py-1.5 px-2 bg-stone-900 text-white active:bg-[#BC8242] text-[10px] font-bold uppercase tracking-wider rounded-xs flex items-center justify-center gap-1 transition-colors shadow-xs"
+          >
+            <ShoppingBag size={11} /> Select Size
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onQuickView(product);
+            }}
+            className="p-1.5 bg-stone-100 text-stone-700 active:bg-stone-200 border border-stone-200 rounded-xs transition-colors shrink-0"
+            aria-label="View product details"
+          >
+            <Eye size={12} />
+          </button>
         </div>
       </div>
     </div>

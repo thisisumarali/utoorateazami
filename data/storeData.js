@@ -9,7 +9,7 @@ export const SITE_CONFIG = {
   currencyFull: "PKR",
   freeShippingThreshold: 3000,
   announcement: "✨ Free Nationwide Delivery on Orders Above Rs. 3,000 | 100% Pure Alcohol-Free Attars",
-  logoUrl: "https://utoorateazami.com/wp-content/uploads/2024/03/cropped-Salman-Logo.png",
+  logoUrl: "/logo.png",
 };
 
 export const HERO_SLIDES = [

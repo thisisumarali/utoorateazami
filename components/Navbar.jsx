@@ -44,9 +44,8 @@ export default function Navbar({
 
       {/* Main Navbar */}
       <div
-        className={`w-full bg-white/95 backdrop-blur-md transition-all border-b border-stone-200 ${
-          isScrolled ? "shadow-md py-2" : "py-2.5 sm:py-3.5"
-        }`}
+        className={`w-full bg-white/95 backdrop-blur-md transition-all border-b border-stone-200 ${isScrolled ? "shadow-md py-2" : "py-2.5 sm:py-3.5"
+          }`}
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2">
           {/* Mobile Menu Button */}
@@ -63,7 +62,7 @@ export default function Navbar({
           {/* Logo / Brand Name */}
           <div className="flex items-center min-w-0">
             <a href="#" className="flex items-center gap-2 sm:gap-3 group">
-              <div className="relative w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden bg-stone-900 flex items-center justify-center border-2 border-[#BC8242] shadow-sm shrink-0 transition-transform group-hover:scale-105">
+              <div className="relative w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 overflow-hidden flex items-center justify-center  shrink-0 transition-transform group-hover:scale-105">
                 <Image
                   src={SITE_CONFIG.logoUrl}
                   alt={SITE_CONFIG.name}
@@ -73,6 +72,7 @@ export default function Navbar({
                   priority
                 />
               </div>
+
               <div className="flex flex-col min-w-0">
                 <span className="font-serif-luxury text-sm sm:text-base md:text-xl font-bold tracking-[0.06em] sm:tracking-[0.14em] text-stone-900 group-hover:text-[#BC8242] transition-colors uppercase whitespace-nowrap">
                   UTOORAT E AZAMI
@@ -129,9 +129,8 @@ export default function Navbar({
                         const section = document.getElementById("catalog-section");
                         if (section) section.scrollIntoView({ behavior: "smooth" });
                       }}
-                      className={`w-full text-left px-4 py-2.5 text-xs font-medium tracking-wider transition-colors hover:bg-stone-50 hover:text-[#BC8242] flex items-center justify-between ${
-                        activeCategory === item.id ? "text-[#BC8242] bg-amber-50/50 font-semibold" : "text-stone-700"
-                      }`}
+                      className={`w-full text-left px-4 py-2.5 text-xs font-medium tracking-wider transition-colors hover:bg-stone-50 hover:text-[#BC8242] flex items-center justify-between ${activeCategory === item.id ? "text-[#BC8242] bg-amber-50/50 font-semibold" : "text-stone-700"
+                        }`}
                     >
                       {item.label}
                       {activeCategory === item.id && <span className="w-1.5 h-1.5 rounded-full bg-[#BC8242]"></span>}
@@ -231,9 +230,8 @@ export default function Navbar({
                       const sec = document.getElementById("catalog-section");
                       if (sec) sec.scrollIntoView({ behavior: "smooth" });
                     }}
-                    className={`block text-xs py-1 text-left w-full transition-colors ${
-                      activeCategory === item.id ? "text-[#BC8242] font-bold" : "text-stone-600 hover:text-stone-900"
-                    }`}
+                    className={`block text-xs py-1 text-left w-full transition-colors ${activeCategory === item.id ? "text-[#BC8242] font-bold" : "text-stone-600 hover:text-stone-900"
+                      }`}
                   >
                     {item.label}
                   </button>

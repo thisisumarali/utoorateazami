@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import HeroSlider from "@/components/HeroSlider";
@@ -29,6 +29,29 @@ export default function Home() {
       quantity: 1,
     },
   ]);
+
+  // Sync cart items with localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("utoorateazami_cart");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setCartItems(parsed);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("utoorateazami_cart", JSON.stringify(cartItems));
+    } catch (err) {
+      console.error(err);
+    }
+  }, [cartItems]);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);

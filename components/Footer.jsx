@@ -25,7 +25,7 @@ export default function Footer({ onSelectCategory }) {
           {/* Brand Col */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full overflow-hidden bg-stone-900 flex items-center justify-center border border-[#BC8242] p-1">
+              <div className="w-12 h-12 overflow-hidden  flex items-center justify-center p-1">
                 <Image
                   src={SITE_CONFIG.logoUrl}
                   alt={SITE_CONFIG.name}
@@ -160,8 +160,9 @@ export default function Footer({ onSelectCategory }) {
               )}
             </form>
 
-            <div className="pt-2 text-[11px] text-stone-500">
-              Accepted Payments: Cash on Delivery (COD), Bank Transfer, JazzCash, EasyPaisa.
+            <div className="pt-2 text-[11px] text-stone-500 flex items-center gap-1.5">
+              <span>Accepted Payment:</span>
+              <span className="font-semibold text-stone-700">Cash on Delivery (COD) Nationwide</span>
             </div>
           </div>
         </div>

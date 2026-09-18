@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Send, Phone, Mail, MapPin, Check } from "lucide-react";
 import { SITE_CONFIG } from "@/data/storeData";
 
@@ -68,6 +69,17 @@ export default function Footer({ onSelectCategory }) {
               Collections
             </h4>
             <ul className="space-y-2 text-xs">
+              <li>
+                <Link
+                  href="/shop"
+                  className="hover:text-[#BC8242] transition-colors font-semibold text-stone-900 flex items-center gap-1"
+                >
+                  <span>Shop All Products</span>
+                  <span className="text-[9px] px-1 py-0.2 bg-[#BC8242] text-white rounded font-bold uppercase">
+                    All
+                  </span>
+                </Link>
+              </li>
               {[
                 { name: "Azamis Special", id: "azamis-special" },
                 { name: "Best Sellers", id: "best-seller" },
@@ -77,16 +89,20 @@ export default function Footer({ onSelectCategory }) {
                 { name: "Luxury Gift Sets", id: "gift-set" },
               ].map((item) => (
                 <li key={item.id}>
-                  <button
-                    onClick={() => {
-                      onSelectCategory(item.id);
-                      const sec = document.getElementById("catalog-section");
-                      if (sec) sec.scrollIntoView({ behavior: "smooth" });
+                  <Link
+                    href={`/shop?category=${item.id}`}
+                    onClick={(e) => {
+                      if (onSelectCategory && typeof window !== "undefined" && window.location.pathname === "/") {
+                        e.preventDefault();
+                        onSelectCategory(item.id);
+                        const sec = document.getElementById("catalog-section");
+                        if (sec) sec.scrollIntoView({ behavior: "smooth" });
+                      }
                     }}
                     className="hover:text-[#BC8242] transition-colors"
                   >
                     {item.name}
-                  </button>
+                  </Link>
                 </li>
               ))}
             </ul>

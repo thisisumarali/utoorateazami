@@ -15,6 +15,7 @@ export default function SearchModal({ isOpen, onClose, onSelectProduct }) {
         product.name.toLowerCase().includes(query.toLowerCase()) ||
         product.categoryDisplay.toLowerCase().includes(query.toLowerCase()) ||
         product.description.toLowerCase().includes(query.toLowerCase()) ||
+        (product.inspiredBy && product.inspiredBy.toLowerCase().includes(query.toLowerCase())) ||
         (product.pyramid && Object.values(product.pyramid).some((note) => note.toLowerCase().includes(query.toLowerCase())));
 
       const matchesCat =
@@ -108,7 +109,7 @@ export default function SearchModal({ isOpen, onClose, onSelectProduct }) {
                 className="flex items-center gap-4 p-2.5 rounded-xs hover:bg-stone-50 border border-transparent hover:border-stone-200 transition-all cursor-pointer group"
               >
                 <div className="relative w-14 h-14 bg-[#f7f6f2] rounded-xs overflow-hidden shrink-0 border border-stone-200">
-                  <Image src={p.image} alt={p.name} fill className="object-contain p-1" />
+                  <Image src={p.image} alt={p.name} fill sizes="56px" className="object-contain p-1" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -124,6 +125,11 @@ export default function SearchModal({ isOpen, onClose, onSelectProduct }) {
                   <span className="text-xs text-stone-500 block truncate">
                     {p.categoryDisplay}
                   </span>
+                  {p.inspiredBy && (
+                    <span className="text-[10px] text-[#925c24] bg-[#fbf7f0] border border-[#BC8242]/20 px-1.5 py-0.5 rounded-xs inline-block mt-0.5 truncate max-w-full">
+                      ✨ {p.inspiredBy}
+                    </span>
+                  )}
                 </div>
                 <div className="text-right">
                   <span className="text-xs font-bold text-stone-900 block">

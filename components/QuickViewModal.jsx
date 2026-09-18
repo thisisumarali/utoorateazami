@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { X, Star, ShoppingBag, Check, ShieldCheck, Clock, Sparkles } from "lucide-react";
+import { X, Star, ShoppingBag, Check, ShieldCheck, Clock, Sparkles, ZoomIn, Maximize2 } from "lucide-react";
 
 export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }) {
   if (!isOpen || !product) return null;
@@ -11,6 +11,7 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(product.image);
   const [addedSuccess, setAddedSuccess] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   const activeVariant =
     product.variants.find((v) => v.size === selectedSize) || product.variants[0];
@@ -76,13 +77,24 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
                 </span>
               )}
 
-              <div className="relative w-full h-44 sm:h-64 max-w-xs flex items-center justify-center">
+              <div
+                onClick={() => setIsLightboxOpen(true)}
+                className="relative w-full h-64 sm:h-80 md:h-[350px] max-w-sm flex items-center justify-center cursor-zoom-in group/zoom"
+                title="Click to open full image"
+              >
                 <Image
                   src={activeImage}
                   alt={product.name}
                   fill
-                  className="object-contain p-2"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-contain p-1 transition-transform duration-300 group-hover/zoom:scale-105"
                 />
+
+                {/* Subtle Hover Zoom Pill */}
+                <div className="absolute bottom-2 right-2 z-10 px-2.5 py-1 rounded-full bg-white/90 hover:bg-white text-stone-800 text-[11px] font-semibold flex items-center gap-1.5 shadow-md border border-stone-200/80 backdrop-blur-xs transition-all opacity-85 group-hover/zoom:opacity-100">
+                  <ZoomIn size={13} className="text-[#BC8242]" />
+                  <span>Click to expand</span>
+                </div>
               </div>
 
               {/* Thumbnail switcher if secondary image exists */}
@@ -90,22 +102,22 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
                 <div className="flex gap-2 mt-2 sm:mt-4">
                   <button
                     onClick={() => setActiveImage(product.image)}
-                    className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xs border overflow-hidden p-1 bg-white ${
-                      activeImage === product.image ? "border-[#BC8242] ring-1 ring-[#BC8242]" : "border-stone-300"
+                    className={`w-11 h-11 sm:w-14 sm:h-14 rounded-xs border overflow-hidden p-1 bg-white transition-all ${
+                      activeImage === product.image ? "border-[#BC8242] ring-2 ring-[#BC8242]/40 scale-105" : "border-stone-300 opacity-75 hover:opacity-100"
                     }`}
                   >
                     <div className="relative w-full h-full">
-                      <Image src={product.image} alt={product.name} fill className="object-contain" />
+                      <Image src={product.image} alt={product.name} fill sizes="56px" className="object-contain" />
                     </div>
                   </button>
                   <button
                     onClick={() => setActiveImage(product.secondaryImage)}
-                    className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xs border overflow-hidden p-1 bg-white ${
-                      activeImage === product.secondaryImage ? "border-[#BC8242] ring-1 ring-[#BC8242]" : "border-stone-300"
+                    className={`w-11 h-11 sm:w-14 sm:h-14 rounded-xs border overflow-hidden p-1 bg-white transition-all ${
+                      activeImage === product.secondaryImage ? "border-[#BC8242] ring-2 ring-[#BC8242]/40 scale-105" : "border-stone-300 opacity-75 hover:opacity-100"
                     }`}
                   >
                     <div className="relative w-full h-full">
-                      <Image src={product.secondaryImage} alt={product.name} fill className="object-contain" />
+                      <Image src={product.secondaryImage} alt={product.name} fill sizes="56px" className="object-contain" />
                     </div>
                   </button>
                 </div>
@@ -134,6 +146,14 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
                     {product.rating} ({product.reviewsCount} reviews)
                   </span>
                 </div>
+
+                {/* Optional Inspiration Note */}
+                {product.inspiredBy && (
+                  <div className="inline-flex items-center gap-1.5 text-xs font-medium text-[#925c24] bg-[#fbf7f0] border border-[#BC8242]/30 px-2.5 py-1 rounded-xs mt-2.5 shadow-xs">
+                    <Sparkles size={12} className="text-[#BC8242] shrink-0" />
+                    <span>{product.inspiredBy}</span>
+                  </div>
+                )}
 
                 {/* Price display based on variant */}
                 <div className="flex items-baseline gap-2.5 mt-2">
@@ -276,6 +296,84 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
           </div>
         </div>
       </div>
+
+      {/* Fullscreen Image Lightbox Modal */}
+      {isLightboxOpen && (
+        <div
+          className="fixed inset-0 z-[70] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4 select-none animate-fadeIn"
+          onClick={() => setIsLightboxOpen(false)}
+        >
+          {/* Lightbox Header Bar */}
+          <div className="absolute top-4 inset-x-0 px-6 flex items-center justify-between z-30">
+            <div>
+              <span className="text-white text-base sm:text-lg font-serif-luxury font-bold tracking-wider uppercase block">
+                {product.name}
+              </span>
+              {product.inspiredBy && (
+                <span className="text-amber-300 text-xs font-medium">
+                  {product.inspiredBy}
+                </span>
+              )}
+            </div>
+
+            <button
+              onClick={() => setIsLightboxOpen(false)}
+              className="p-2 rounded-full bg-white/20 hover:bg-white/35 text-white transition-colors cursor-pointer"
+              aria-label="Close full view"
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          {/* Full Resolution Image Container */}
+          <div
+            className="relative max-w-4xl w-full h-[72vh] sm:h-[80vh] flex items-center justify-center p-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={activeImage}
+              alt={product.name}
+              fill
+              sizes="(max-width: 1024px) 95vw, 1200px"
+              className="object-contain drop-shadow-2xl"
+              priority
+            />
+          </div>
+
+          {/* Thumbnails switcher in lightbox */}
+          {product.secondaryImage && (
+            <div
+              className="relative z-30 flex items-center gap-3 mt-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setActiveImage(product.image)}
+                className={`w-14 h-14 rounded-xs border-2 overflow-hidden p-1 bg-white transition-all cursor-pointer ${
+                  activeImage === product.image
+                    ? "border-[#BC8242] scale-105 ring-2 ring-[#BC8242]"
+                    : "border-white/40 opacity-70 hover:opacity-100"
+                }`}
+              >
+                <div className="relative w-full h-full">
+                  <Image src={product.image} alt={product.name} fill sizes="60px" className="object-contain" />
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveImage(product.secondaryImage)}
+                className={`w-14 h-14 rounded-xs border-2 overflow-hidden p-1 bg-white transition-all cursor-pointer ${
+                  activeImage === product.secondaryImage
+                    ? "border-[#BC8242] scale-105 ring-2 ring-[#BC8242]"
+                    : "border-white/40 opacity-70 hover:opacity-100"
+                }`}
+              >
+                <div className="relative w-full h-full">
+                  <Image src={product.secondaryImage} alt={product.name} fill sizes="60px" className="object-contain" />
+                </div>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

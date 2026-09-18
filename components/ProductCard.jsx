@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Eye, ShoppingBag, Check } from "lucide-react";
+import { Eye, ShoppingBag, Check, Sparkles } from "lucide-react";
 
 export default function ProductCard({
   product,
@@ -48,14 +48,14 @@ export default function ProductCard({
           </span>
         )}
 
-        {/* Product Image with smooth hover scale */}
-        <div className="relative w-full h-full p-2 sm:p-4 flex items-center justify-center">
+        {/* Product Image with smooth hover scale - enlarged presentation */}
+        <div className="relative w-full h-full p-1 sm:p-1.5 flex items-center justify-center">
           <Image
             src={product.image}
             alt={product.name}
             fill
-            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 25vw"
-            className={`object-contain transition-transform duration-500 ease-out p-1.5 sm:p-3 ${
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className={`object-contain transition-transform duration-500 ease-out p-0.5 sm:p-1 ${
               isHovered ? "scale-108" : "scale-100"
             }`}
           />
@@ -123,12 +123,20 @@ export default function ProductCard({
       </div>
 
       {/* Product Details - Simple, Neat, Clean (just like user reference) */}
-      <div className="pt-2 sm:pt-3 pb-1 text-left">
+      <div className="pt-2 sm:pt-3 pb-1 text-left flex flex-col flex-1">
         <h3 className="text-xs sm:text-sm md:text-base font-serif-luxury font-medium text-stone-900 tracking-wide group-hover:text-[#BC8242] transition-colors truncate">
           {product.name}
         </h3>
 
-        <div className="flex items-baseline justify-between gap-1 mt-0.5 sm:mt-1">
+        {/* Optional Inspired-by Note (e.g. Inspired by Zarar / Creed Aventus) */}
+        {product.inspiredBy && (
+          <div className="mt-1 flex items-center gap-1 text-[10px] sm:text-[11px] font-medium text-[#925c24] bg-[#fbf7f0] border border-[#BC8242]/25 px-1.5 py-0.5 rounded-xs tracking-tight shadow-xs group-hover:border-[#BC8242]/45 transition-colors">
+            <Sparkles size={10} className="text-[#BC8242] shrink-0" />
+            <span className="truncate">{product.inspiredBy}</span>
+          </div>
+        )}
+
+        <div className="flex items-baseline justify-between gap-1 mt-1 sm:mt-1.5">
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-stone-800 tracking-wider">
               {product.priceDisplay}

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { CATEGORIES } from "@/data/storeData";
 import { ArrowUpRight } from "lucide-react";
 
@@ -8,10 +9,16 @@ export default function CategoryShowcase({ onSelectCategory }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
       {CATEGORIES.map((category) => (
-        <div
+        <Link
           key={category.id}
-          onClick={() => onSelectCategory(category.id)}
-          className="group relative h-48 sm:h-64 md:h-80 rounded-xs overflow-hidden cursor-pointer bg-stone-100 border border-stone-200 transition-all duration-300 hover:shadow-lg"
+          href={`/shop?category=${category.id}`}
+          onClick={(e) => {
+            if (onSelectCategory) {
+              e.preventDefault();
+              onSelectCategory(category.id);
+            }
+          }}
+          className="group relative h-48 sm:h-64 md:h-80 rounded-xs overflow-hidden cursor-pointer bg-stone-100 border border-stone-200 transition-all duration-300 hover:shadow-lg block"
         >
           {/* Background Image */}
           <div className="relative w-full h-full">
@@ -43,7 +50,7 @@ export default function CategoryShowcase({ onSelectCategory }) {
               {category.subtext}
             </p>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );

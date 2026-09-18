@@ -1,5 +1,6 @@
 import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { CartProvider } from "@/context/CartContext";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -39,7 +40,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${playfair.variable} ${plusJakarta.variable} scroll-smooth`}>
       <body className="min-h-screen flex flex-col bg-white text-stone-900 antialiased selection:bg-[#f3dfc6] selection:text-[#744512]">
-        {children}
+        <CartProvider>
+          {children}
+        </CartProvider>
       </body>
     </html>
   );

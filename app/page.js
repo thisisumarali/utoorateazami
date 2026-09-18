@@ -1,108 +1,24 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import HeroSlider from "@/components/HeroSlider";
 import SectionHeader from "@/components/SectionHeader";
 import ProductCard from "@/components/ProductCard";
 import CategoryShowcase from "@/components/CategoryShowcase";
-import CartDrawer from "@/components/CartDrawer";
-import QuickViewModal from "@/components/QuickViewModal";
-import SearchModal from "@/components/SearchModal";
-import WhatsAppButton from "@/components/WhatsAppButton";
 import TrustBadges from "@/components/TrustBadges";
 import Footer from "@/components/Footer";
 import { PRODUCTS, TESTIMONIALS, SITE_CONFIG } from "@/data/storeData";
-import { Star, CheckCircle, Sparkles, Gift, ArrowRight } from "lucide-react";
+import { useCart } from "@/context/CartContext";
+import { Star, Gift, ArrowRight } from "lucide-react";
 
 export default function Home() {
-  const [cartItems, setCartItems] = useState([
-    // Sample initial item so user immediately sees populated cart in header
-    {
-      id: "silver-oud-3ml",
-      productId: "silver-oud",
-      name: "SILVER OUD",
-      image: "https://utoorateazami.com/wp-content/uploads/2024/09/74-1024x1024.png",
-      size: "3ml",
-      price: 500,
-      quantity: 1,
-    },
-  ]);
-
-  // Sync cart items with localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("utoorateazami_cart");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          setCartItems(parsed);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("utoorateazami_cart", JSON.stringify(cartItems));
-    } catch (err) {
-      console.error(err);
-    }
-  }, [cartItems]);
-
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const router = useRouter();
+  const { addToCart, setQuickViewProduct } = useCart();
   const [activeCategory, setActiveCategory] = useState("all");
-  const [toastMessage, setToastMessage] = useState("");
-
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(""), 2500);
-  };
-
-  // Cart operations
-  const handleAddToCart = (newItem) => {
-    setCartItems((prev) => {
-      const existingIdx = prev.findIndex((i) => i.id === newItem.id);
-      if (existingIdx > -1) {
-        const updated = [...prev];
-        updated[existingIdx].quantity += newItem.quantity;
-        return updated;
-      }
-      return [...prev, newItem];
-    });
-    showToast(`Added ${newItem.name} (${newItem.size}) to cart!`);
-    setIsCartOpen(true);
-  };
-
-  const handleUpdateQuantity = (itemId, newQty) => {
-    if (newQty <= 0) {
-      handleRemoveItem(itemId);
-      return;
-    }
-    setCartItems((prev) =>
-      prev.map((i) => (i.id === itemId ? { ...i, quantity: newQty } : i))
-    );
-  };
-
-  const handleRemoveItem = (itemId) => {
-    setCartItems((prev) => prev.filter((i) => i.id !== itemId));
-  };
-
-  const handleClearCart = () => {
-    setCartItems([]);
-  };
-
-  // Totals
-  const cartTotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   // Azamis Special (4 spotlight products for top row)
   const azamisSpecial = useMemo(() => {
@@ -131,25 +47,15 @@ export default function Home() {
       if (el) {
         el.scrollIntoView({ behavior: "smooth" });
       }
+    } else if (targetId.startsWith("/")) {
+      router.push(targetId);
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-stone-900 font-sans selection:bg-amber-100 selection:text-amber-900">
-      {/* Toast notification */}
-      {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-stone-900 text-white px-4 py-2.5 rounded-xs shadow-xl text-xs font-semibold flex items-center gap-2 animate-fadeIn border border-stone-700">
-          <CheckCircle size={16} className="text-[#BC8242]" />
-          {toastMessage}
-        </div>
-      )}
-
       {/* Main Navbar */}
       <Navbar
-        cartCount={cartCount}
-        cartTotal={cartTotal}
-        onOpenCart={() => setIsCartOpen(true)}
-        onOpenSearch={() => setIsSearchOpen(true)}
         activeCategory={activeCategory}
         onSelectCategory={(cat) => {
           setActiveCategory(cat);
@@ -174,7 +80,7 @@ export default function Home() {
                 key={product.id}
                 product={product}
                 onQuickView={setQuickViewProduct}
-                onAddToCart={handleAddToCart}
+                onAddToCart={addToCart}
               />
             ))}
           </div>
@@ -224,16 +130,27 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Product Grid */}
+          {/* Product Grid - Max 8 Products */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8">
-            {filteredCatalog.map((product) => (
+            {filteredCatalog.slice(0, 8).map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}
                 onQuickView={setQuickViewProduct}
-                onAddToCart={handleAddToCart}
+                onAddToCart={addToCart}
               />
             ))}
+          </div>
+
+          {/* Explore Full Shop CTA */}
+          <div className="mt-10 sm:mt-14 text-center">
+            <Link
+              href="/shop"
+              className="inline-flex items-center gap-2.5 px-8 py-3.5 bg-stone-900 hover:bg-[#BC8242] active:bg-[#925c24] text-white text-xs sm:text-sm font-bold uppercase tracking-widest rounded-xs transition-all shadow-md group"
+            >
+              <span>Explore Complete Shop</span>
+              <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform" />
+            </Link>
           </div>
         </section>
 
@@ -376,39 +293,13 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <Footer onSelectCategory={(cat) => {
-        setActiveCategory(cat);
-        const sec = document.getElementById("catalog-section");
-        if (sec) sec.scrollIntoView({ behavior: "smooth" });
-      }} />
-
-      {/* Slide-over Cart Drawer */}
-      <CartDrawer
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        items={cartItems}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={handleRemoveItem}
-        onClearCart={handleClearCart}
+      <Footer
+        onSelectCategory={(cat) => {
+          setActiveCategory(cat);
+          const sec = document.getElementById("catalog-section");
+          if (sec) sec.scrollIntoView({ behavior: "smooth" });
+        }}
       />
-
-      {/* Quick View Modal */}
-      <QuickViewModal
-        product={quickViewProduct}
-        isOpen={!!quickViewProduct}
-        onClose={() => setQuickViewProduct(null)}
-        onAddToCart={handleAddToCart}
-      />
-
-      {/* Instant Search Modal */}
-      <SearchModal
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        onSelectProduct={(product) => setQuickViewProduct(product)}
-      />
-
-      {/* Floating WhatsApp Button matching screenshot */}
-      <WhatsAppButton />
     </div>
   );
 }

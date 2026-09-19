@@ -2,10 +2,9 @@
 const nextConfig = {
   reactCompiler: true,
   images: {
-    formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 31536000, // 1 year cache for remote images
-    deviceSizes: [640, 750, 828, 1080, 1200],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Unoptimized allows client browsers to fetch remote WordPress images directly,
+    // completely eliminating server-side 7-second fetch timeouts and 500 errors.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -22,3 +21,4 @@ const nextConfig = {
 };
 
 export default nextConfig;
+

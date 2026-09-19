@@ -165,6 +165,7 @@ export default function Home() {
                     src="https://utoorateazami.com/wp-content/uploads/2024/03/shamekh-gs-min-600x800-1-300x300.png"
                     alt="Shamekh Gift Set"
                     fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 300px"
                     className="object-contain p-3 transition-transform duration-500 group-hover:scale-105"
                   />
                   <span className="absolute top-3 left-3 px-2 py-0.5 bg-[#BC8242] text-white text-[10px] font-bold uppercase rounded-xs">
@@ -176,6 +177,7 @@ export default function Home() {
                     src="https://utoorateazami.com/wp-content/uploads/2024/03/BIDUN-ESAM-GIFT-SET-600x759-1-300x300.png"
                     alt="Bidun Esam Gift Set"
                     fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 300px"
                     className="object-contain p-3 transition-transform duration-500 group-hover:scale-105"
                   />
                   <span className="absolute top-3 left-3 px-2 py-0.5 bg-[#BC8242] text-white text-[10px] font-bold uppercase rounded-xs">

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Eye, ShoppingBag, Check, Sparkles } from "lucide-react";
+import { Eye, ShoppingBag, Check, Sparkles, Maximize2 } from "lucide-react";
 
 export default function ProductCard({
   product,
@@ -48,14 +48,27 @@ export default function ProductCard({
           </span>
         )}
 
+        {/* Quick Zoom Pill Button (Desktop & Mobile accessible) */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onQuickView(product);
+          }}
+          className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-white/90 hover:bg-white text-stone-700 hover:text-[#BC8242] shadow-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+          title="Open & Zoom Image"
+          aria-label="Open image and details"
+        >
+          <Maximize2 size={13} />
+        </button>
+
         {/* Product Image with smooth hover scale - enlarged presentation */}
-        <div className="relative w-full h-full p-1 sm:p-1.5 flex items-center justify-center">
+        <div className="relative w-full h-full p-1 sm:p-2 flex items-center justify-center">
           <Image
             src={product.image}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className={`object-contain transition-transform duration-500 ease-out p-0.5 sm:p-1 ${
+            className={`object-contain transition-transform duration-500 ease-out p-0.5 ${
               isHovered ? "scale-108" : "scale-100"
             }`}
           />

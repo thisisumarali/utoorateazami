@@ -1,17 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { X, Star, ShoppingBag, Check, ShieldCheck, Clock, Sparkles, ZoomIn, Maximize2 } from "lucide-react";
 
 export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }) {
-  if (!isOpen || !product) return null;
-
-  const [selectedSize, setSelectedSize] = useState(product.variants[0]?.size || "3ml");
+  const [selectedSize, setSelectedSize] = useState(product?.variants?.[0]?.size || "3ml");
   const [quantity, setQuantity] = useState(1);
-  const [activeImage, setActiveImage] = useState(product.image);
+  const [activeImage, setActiveImage] = useState(product?.image || "");
   const [addedSuccess, setAddedSuccess] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+  // Derive guaranteed non-empty image source
+  const displayImage = activeImage || product?.image || null;
+
+  // Sync state whenever active product changes
+  useEffect(() => {
+    if (product) {
+      setSelectedSize(product.variants?.[0]?.size || "3ml");
+      setQuantity(1);
+      setActiveImage(product.image || "");
+      setIsLightboxOpen(false);
+    }
+  }, [product]);
+
+  // Handle ESC key to dismiss modal or lightbox
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        if (isLightboxOpen) {
+          setIsLightboxOpen(false);
+        } else if (isOpen) {
+          onClose();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, isLightboxOpen, onClose]);
+
+  if (!isOpen || !product) return null;
 
   const activeVariant =
     product.variants.find((v) => v.size === selectedSize) || product.variants[0];
@@ -82,13 +110,15 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
                 className="relative w-full h-64 sm:h-80 md:h-[350px] max-w-sm flex items-center justify-center cursor-zoom-in group/zoom"
                 title="Click to open full image"
               >
-                <Image
-                  src={activeImage}
-                  alt={product.name}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-contain p-1 transition-transform duration-300 group-hover/zoom:scale-105"
-                />
+                {displayImage ? (
+                  <Image
+                    src={displayImage}
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-contain p-1 transition-transform duration-300 group-hover/zoom:scale-105"
+                  />
+                ) : null}
 
                 {/* Subtle Hover Zoom Pill */}
                 <div className="absolute bottom-2 right-2 z-10 px-2.5 py-1 rounded-full bg-white/90 hover:bg-white text-stone-800 text-[11px] font-semibold flex items-center gap-1.5 shadow-md border border-stone-200/80 backdrop-blur-xs transition-all opacity-85 group-hover/zoom:opacity-100">
@@ -103,7 +133,7 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
                   <button
                     onClick={() => setActiveImage(product.image)}
                     className={`w-11 h-11 sm:w-14 sm:h-14 rounded-xs border overflow-hidden p-1 bg-white transition-all ${
-                      activeImage === product.image ? "border-[#BC8242] ring-2 ring-[#BC8242]/40 scale-105" : "border-stone-300 opacity-75 hover:opacity-100"
+                      displayImage === product.image ? "border-[#BC8242] ring-2 ring-[#BC8242]/40 scale-105" : "border-stone-300 opacity-75 hover:opacity-100"
                     }`}
                   >
                     <div className="relative w-full h-full">
@@ -113,7 +143,7 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
                   <button
                     onClick={() => setActiveImage(product.secondaryImage)}
                     className={`w-11 h-11 sm:w-14 sm:h-14 rounded-xs border overflow-hidden p-1 bg-white transition-all ${
-                      activeImage === product.secondaryImage ? "border-[#BC8242] ring-2 ring-[#BC8242]/40 scale-105" : "border-stone-300 opacity-75 hover:opacity-100"
+                      displayImage === product.secondaryImage ? "border-[#BC8242] ring-2 ring-[#BC8242]/40 scale-105" : "border-stone-300 opacity-75 hover:opacity-100"
                     }`}
                   >
                     <div className="relative w-full h-full">
@@ -330,14 +360,16 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
             className="relative max-w-4xl w-full h-[72vh] sm:h-[80vh] flex items-center justify-center p-2"
             onClick={(e) => e.stopPropagation()}
           >
-            <Image
-              src={activeImage}
-              alt={product.name}
-              fill
-              sizes="(max-width: 1024px) 95vw, 1200px"
-              className="object-contain drop-shadow-2xl"
-              priority
-            />
+            {displayImage ? (
+              <Image
+                src={displayImage}
+                alt={product.name}
+                fill
+                sizes="(max-width: 1024px) 95vw, 1200px"
+                className="object-contain drop-shadow-2xl"
+                priority
+              />
+            ) : null}
           </div>
 
           {/* Thumbnails switcher in lightbox */}
@@ -349,7 +381,7 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
               <button
                 onClick={() => setActiveImage(product.image)}
                 className={`w-14 h-14 rounded-xs border-2 overflow-hidden p-1 bg-white transition-all cursor-pointer ${
-                  activeImage === product.image
+                  displayImage === product.image
                     ? "border-[#BC8242] scale-105 ring-2 ring-[#BC8242]"
                     : "border-white/40 opacity-70 hover:opacity-100"
                 }`}
@@ -361,7 +393,7 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
               <button
                 onClick={() => setActiveImage(product.secondaryImage)}
                 className={`w-14 h-14 rounded-xs border-2 overflow-hidden p-1 bg-white transition-all cursor-pointer ${
-                  activeImage === product.secondaryImage
+                  displayImage === product.secondaryImage
                     ? "border-[#BC8242] scale-105 ring-2 ring-[#BC8242]"
                     : "border-white/40 opacity-70 hover:opacity-100"
                 }`}

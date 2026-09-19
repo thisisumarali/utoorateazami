@@ -142,12 +142,15 @@ export function CartProvider({ children }) {
         onClearCart={clearCart}
       />
 
-      <QuickViewModal
-        product={quickViewProduct}
-        isOpen={Boolean(quickViewProduct)}
-        onClose={() => setQuickViewProduct(null)}
-        onAddToCart={addToCart}
-      />
+      {quickViewProduct && (
+        <QuickViewModal
+          key={quickViewProduct.id}
+          product={quickViewProduct}
+          isOpen={true}
+          onClose={() => setQuickViewProduct(null)}
+          onAddToCart={addToCart}
+        />
+      )}
 
       <SearchModal
         isOpen={isSearchOpen}

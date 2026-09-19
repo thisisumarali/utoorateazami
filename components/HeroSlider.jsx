@@ -74,6 +74,7 @@ export default function HeroSlider({ onExploreClick }) {
                 alt={slide.title}
                 fill
                 priority={index === 0}
+                sizes="100vw"
                 className="object-cover object-center brightness-[0.85] contrast-[1.05]"
               />
               {/* Luxury Light-Vignette Overlay for crystal clear readability */}

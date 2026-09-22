@@ -17,7 +17,7 @@ import { Star, Gift, ArrowRight } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
-  const { addToCart, setQuickViewProduct } = useCart();
+  const { addToCart } = useCart();
   const [activeCategory, setActiveCategory] = useState("all");
 
   // Azamis Special (4 spotlight products for top row)
@@ -79,7 +79,6 @@ export default function Home() {
               <ProductCard
                 key={product.id}
                 product={product}
-                onQuickView={setQuickViewProduct}
                 onAddToCart={addToCart}
               />
             ))}
@@ -136,7 +135,6 @@ export default function Home() {
               <ProductCard
                 key={product.id}
                 product={product}
-                onQuickView={setQuickViewProduct}
                 onAddToCart={addToCart}
               />
             ))}
@@ -214,24 +212,18 @@ export default function Home() {
                 </div>
 
                 <div className="flex items-center gap-4 pt-2">
-                  <button
-                    onClick={() => {
-                      const shamekh = PRODUCTS.find((p) => p.id === "shamekh-gift-set");
-                      if (shamekh) setQuickViewProduct(shamekh);
-                    }}
+                  <Link
+                    href="/product/shamekh-gift-set"
                     className="px-6 py-3 rounded-full bg-[#BC8242] hover:bg-[#a36b2f] text-white text-xs font-semibold uppercase tracking-wider transition-colors shadow-md flex items-center gap-2"
                   >
                     View Shamekh Set (Rs9,765) <ArrowRight size={14} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      const bidun = PRODUCTS.find((p) => p.id === "bidun-esam-gift-set");
-                      if (bidun) setQuickViewProduct(bidun);
-                    }}
+                  </Link>
+                  <Link
+                    href="/product/bidun-esam-gift-set"
                     className="px-6 py-3 rounded-full border border-stone-800 text-stone-900 hover:bg-stone-900 hover:text-white text-xs font-semibold uppercase tracking-wider transition-colors"
                   >
                     View Bidun Esam Set
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

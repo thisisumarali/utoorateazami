@@ -2,10 +2,12 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Search, X, ShoppingBag } from "lucide-react";
 import { PRODUCTS } from "@/data/storeData";
 
 export default function SearchModal({ isOpen, onClose, onSelectProduct }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
@@ -103,7 +105,8 @@ export default function SearchModal({ isOpen, onClose, onSelectProduct }) {
               <div
                 key={p.id}
                 onClick={() => {
-                  onSelectProduct(p);
+                  if (onSelectProduct) onSelectProduct(p);
+                  router.push(`/product/${p.id}`);
                   onClose();
                 }}
                 className="flex items-center gap-4 p-2.5 rounded-xs hover:bg-stone-50 border border-transparent hover:border-stone-200 transition-all cursor-pointer group"

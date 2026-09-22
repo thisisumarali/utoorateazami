@@ -22,7 +22,7 @@ import {
 export default function ShopClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { addToCart, setQuickViewProduct } = useCart();
+  const { addToCart } = useCart();
 
   const initialCategory = searchParams.get("category") || "all";
   const initialQuery = searchParams.get("q") || "";
@@ -247,7 +247,6 @@ export default function ShopClient() {
               <ProductCard
                 key={product.id}
                 product={product}
-                onQuickView={(p) => setQuickViewProduct(p)}
                 onAddToCart={(item) => addToCart(item)}
               />
             ))}

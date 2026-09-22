@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, ShoppingBag, Check, Sparkles, Maximize2 } from "lucide-react";
 
 export default function ProductCard({
@@ -9,6 +11,7 @@ export default function ProductCard({
   onQuickView,
   onAddToCart,
 }) {
+  const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [selectedSize, setSelectedSize] = useState(product.variants[0]?.size || "3ml");
   const [addedAnimation, setAddedAnimation] = useState(false);
@@ -17,19 +20,28 @@ export default function ProductCard({
   const activeVariant =
     product.variants.find((v) => v.size === selectedSize) || product.variants[0];
 
+  const navigateToProduct = (e) => {
+    if (e) e.stopPropagation();
+    router.push(`/product/${product.id}`);
+  };
+
   const handleQuickAdd = (e) => {
     e.stopPropagation();
-    onAddToCart({
-      id: `${product.id}-${activeVariant.size}`,
-      productId: product.id,
-      name: product.name,
-      image: product.image,
-      size: activeVariant.size,
-      price: activeVariant.price,
-      quantity: 1,
-    });
-    setAddedAnimation(true);
-    setTimeout(() => setAddedAnimation(false), 1600);
+    if (onAddToCart) {
+      onAddToCart({
+        id: `${product.id}-${activeVariant.size}`,
+        productId: product.id,
+        name: product.name,
+        image: product.image,
+        size: activeVariant.size,
+        price: activeVariant.price,
+        quantity: 1,
+      });
+      setAddedAnimation(true);
+      setTimeout(() => setAddedAnimation(false), 1600);
+    } else {
+      navigateToProduct(e);
+    }
   };
 
   return (
@@ -37,7 +49,7 @@ export default function ProductCard({
       className="group flex flex-col bg-transparent cursor-pointer transition-all duration-300 select-none"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => onQuickView(product)}
+      onClick={navigateToProduct}
     >
       {/* Product Image Container */}
       <div className="relative aspect-square w-full overflow-hidden bg-[#f7f6f2] rounded-xs border border-stone-200/80 transition-shadow group-hover:shadow-md">
@@ -48,20 +60,17 @@ export default function ProductCard({
           </span>
         )}
 
-        {/* Quick Zoom Pill Button (Desktop & Mobile accessible) */}
+        {/* Quick View / Full Page Trigger */}
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onQuickView(product);
-          }}
+          onClick={navigateToProduct}
           className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-white/90 hover:bg-white text-stone-700 hover:text-[#BC8242] shadow-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-          title="Open & Zoom Image"
-          aria-label="Open image and details"
+          title="View Product Page"
+          aria-label="View product page"
         >
           <Maximize2 size={13} />
         </button>
 
-        {/* Product Image with smooth hover scale - enlarged presentation */}
+        {/* Product Image with smooth hover scale */}
         <div className="relative w-full h-full p-1 sm:p-2 flex items-center justify-center">
           <Image
             src={product.image}
@@ -122,12 +131,9 @@ export default function ProductCard({
             </button>
 
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onQuickView(product);
-              }}
+              onClick={navigateToProduct}
               className="p-1.5 bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 rounded-xs transition-colors"
-              title="Quick View Details"
+              title="View Product Page"
             >
               <Eye size={15} />
             </button>
@@ -135,13 +141,17 @@ export default function ProductCard({
         </div>
       </div>
 
-      {/* Product Details - Simple, Neat, Clean (just like user reference) */}
+      {/* Product Details */}
       <div className="pt-2 sm:pt-3 pb-1 text-left flex flex-col flex-1">
-        <h3 className="text-xs sm:text-sm md:text-base font-serif-luxury font-medium text-stone-900 tracking-wide group-hover:text-[#BC8242] transition-colors truncate">
+        <Link
+          href={`/product/${product.id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="text-xs sm:text-sm md:text-base font-serif-luxury font-medium text-stone-900 tracking-wide group-hover:text-[#BC8242] transition-colors truncate block"
+        >
           {product.name}
-        </h3>
+        </Link>
 
-        {/* Optional Inspired-by Note (e.g. Inspired by Zarar / Creed Aventus) */}
+        {/* Optional Inspired-by Note */}
         {product.inspiredBy && (
           <div className="mt-1 flex items-center gap-1 text-[10px] sm:text-[11px] font-medium text-[#925c24] bg-[#fbf7f0] border border-[#BC8242]/25 px-1.5 py-0.5 rounded-xs tracking-tight shadow-xs group-hover:border-[#BC8242]/45 transition-colors">
             <Sparkles size={10} className="text-[#BC8242] shrink-0" />
@@ -162,22 +172,16 @@ export default function ProductCard({
           </div>
         </div>
 
-        {/* Mobile Dedicated Touch Actions (visible on mobile only) */}
+        {/* Mobile Dedicated Touch Actions */}
         <div className="mt-2 sm:hidden flex items-center gap-1.5">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuickView(product);
-            }}
+            onClick={navigateToProduct}
             className="flex-1 py-1.5 px-2 bg-stone-900 text-white active:bg-[#BC8242] text-[10px] font-bold uppercase tracking-wider rounded-xs flex items-center justify-center gap-1 transition-colors shadow-xs"
           >
-            <ShoppingBag size={11} /> Select Size
+            <ShoppingBag size={11} /> View Product
           </button>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuickView(product);
-            }}
+            onClick={navigateToProduct}
             className="p-1.5 bg-stone-100 text-stone-700 active:bg-stone-200 border border-stone-200 rounded-xs transition-colors shrink-0"
             aria-label="View product details"
           >

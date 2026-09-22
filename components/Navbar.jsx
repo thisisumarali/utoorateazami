@@ -83,9 +83,8 @@ export default function Navbar({
 
       {/* Main Navbar */}
       <div
-        className={`w-full bg-white/95 backdrop-blur-md transition-all border-b border-stone-200 ${
-          isScrolled ? "shadow-md py-2" : "py-2.5 sm:py-3.5"
-        }`}
+        className={`w-full bg-white/95 backdrop-blur-md transition-all border-b border-stone-200 ${isScrolled ? "shadow-md py-2" : "py-2.5 sm:py-3.5"
+          }`}
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2">
           {/* Mobile Menu Button */}
@@ -121,6 +120,7 @@ export default function Navbar({
                   {SITE_CONFIG.arabicName}
                 </span>
               </div>
+
             </Link>
           </div>
 
@@ -128,20 +128,18 @@ export default function Navbar({
           <nav className="hidden lg:flex items-center space-x-7 text-[13px] font-semibold tracking-[0.15em] text-stone-800">
             <Link
               href="/"
-              className={`hover:text-[#BC8242] transition-colors ${
-                pathname === "/" ? "text-[#BC8242] border-b border-[#BC8242]" : ""
-              }`}
+              className={`hover:text-[#BC8242] transition-colors ${pathname === "/" ? "text-[#BC8242] border-b border-[#BC8242]" : ""
+                }`}
             >
               HOME
             </Link>
 
             <Link
               href="/shop"
-              className={`hover:text-[#BC8242] transition-colors flex items-center gap-1 ${
-                pathname.startsWith("/shop")
-                  ? "text-[#BC8242] border-b border-[#BC8242]"
-                  : ""
-              }`}
+              className={`hover:text-[#BC8242] transition-colors flex items-center gap-1 ${pathname.startsWith("/shop")
+                ? "text-[#BC8242] border-b border-[#BC8242]"
+                : ""
+                }`}
             >
               SHOP
               <span className="text-[9px] px-1 py-0.2 bg-[#BC8242] text-white rounded font-bold uppercase tracking-normal">
@@ -162,9 +160,8 @@ export default function Navbar({
                 COLLECTION
                 <ChevronDown
                   size={14}
-                  className={`transition-transform duration-200 ${
-                    collectionDropdownOpen ? "rotate-180 text-[#BC8242]" : ""
-                  }`}
+                  className={`transition-transform duration-200 ${collectionDropdownOpen ? "rotate-180 text-[#BC8242]" : ""
+                    }`}
                 />
               </button>
 
@@ -174,11 +171,10 @@ export default function Navbar({
                     <button
                       key={item.id}
                       onClick={() => handleCategoryClick(item.id)}
-                      className={`w-full text-left px-4 py-2.5 text-xs font-medium tracking-wider transition-colors hover:bg-stone-50 hover:text-[#BC8242] flex items-center justify-between ${
-                        activeCategory === item.id
-                          ? "text-[#BC8242] bg-amber-50/50 font-semibold"
-                          : "text-stone-700"
-                      }`}
+                      className={`w-full text-left px-4 py-2.5 text-xs font-medium tracking-wider transition-colors hover:bg-stone-50 hover:text-[#BC8242] flex items-center justify-between ${activeCategory === item.id
+                        ? "text-[#BC8242] bg-amber-50/50 font-semibold"
+                        : "text-stone-700"
+                        }`}
                     >
                       {item.label}
                       {activeCategory === item.id && (
@@ -206,11 +202,10 @@ export default function Navbar({
 
             <Link
               href="/contact"
-              className={`hover:text-[#BC8242] transition-colors ${
-                pathname === "/contact"
-                  ? "text-[#BC8242] border-b border-[#BC8242]"
-                  : ""
-              }`}
+              className={`hover:text-[#BC8242] transition-colors ${pathname === "/contact"
+                ? "text-[#BC8242] border-b border-[#BC8242]"
+                : ""
+                }`}
             >
               CONTACT US
             </Link>
@@ -293,11 +288,10 @@ export default function Navbar({
                   <button
                     key={item.id}
                     onClick={() => handleCategoryClick(item.id)}
-                    className={`block text-xs py-1 text-left w-full transition-colors ${
-                      activeCategory === item.id
-                        ? "text-[#BC8242] font-bold"
-                        : "text-stone-600 hover:text-stone-900"
-                    }`}
+                    className={`block text-xs py-1 text-left w-full transition-colors ${activeCategory === item.id
+                      ? "text-[#BC8242] font-bold"
+                      : "text-stone-600 hover:text-stone-900"
+                      }`}
                   >
                     {item.label}
                   </button>
@@ -324,9 +318,8 @@ export default function Navbar({
             <Link
               href="/contact"
               onClick={() => setMobileMenuOpen(false)}
-              className={`py-1 hover:text-[#BC8242] transition-colors ${
-                pathname === "/contact" ? "text-[#BC8242] font-bold" : ""
-              }`}
+              className={`py-1 hover:text-[#BC8242] transition-colors ${pathname === "/contact" ? "text-[#BC8242] font-bold" : ""
+                }`}
             >
               CONTACT US
             </Link>

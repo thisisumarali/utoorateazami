@@ -196,7 +196,7 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen bg-[#fbf9f5] py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm border border-stone-200 p-6 sm:p-10 space-y-8">
-          
+
           {/* Top Checkmark Header */}
           <div className="text-center space-y-3">
             <div className="w-18 h-18 rounded-full bg-emerald-100/90 border-2 border-emerald-500 flex items-center justify-center text-emerald-600 mx-auto shadow-sm">
@@ -382,24 +382,16 @@ export default function CheckoutPage() {
       {/* Checkout Navbar */}
       <header className="w-full bg-white border-b border-stone-200 py-3.5 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
+          <Link href="/" className="flex items-center group" aria-label={SITE_CONFIG.name}>
+            <div className="relative h-11 sm:h-13 md:h-15 lg:h-16 aspect-square flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
               <Image
                 src={SITE_CONFIG.logoUrl}
                 alt={SITE_CONFIG.name}
-                width={48}
-                height={48}
+                fill
+                sizes="(max-width: 640px) 48px, 64px"
                 className="object-contain"
                 priority
               />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-serif-luxury text-base sm:text-lg font-bold tracking-wider text-stone-900 group-hover:text-[#BC8242] transition-colors uppercase">
-                UTOORAT E AZAMI
-              </span>
-              <span className="text-[9px] tracking-[0.2em] text-[#BC8242] uppercase font-semibold leading-none">
-                {SITE_CONFIG.arabicName}
-              </span>
             </div>
           </Link>
 
@@ -421,7 +413,7 @@ export default function CheckoutPage() {
       {/* Main Content Grid */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-          
+
           {/* Left Column: Delivery Details & Payment */}
           <div className="lg:col-span-7 space-y-8">
             <div className="bg-white p-6 sm:p-8 rounded-lg border border-stone-200 shadow-xs space-y-6">
@@ -448,9 +440,8 @@ export default function CheckoutPage() {
                       setCustomerInfo({ ...customerInfo, name: e.target.value });
                       if (formErrors.name) setFormErrors({ ...formErrors, name: null });
                     }}
-                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm border rounded-sm focus:outline-none ${
-                      formErrors.name ? "border-red-500 bg-red-50/20" : "border-stone-300 focus:border-[#BC8242]"
-                    }`}
+                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm border rounded-sm focus:outline-none ${formErrors.name ? "border-red-500 bg-red-50/20" : "border-stone-300 focus:border-[#BC8242]"
+                      }`}
                   />
                   {formErrors.name && (
                     <p className="text-[11px] text-red-500 mt-1">{formErrors.name}</p>
@@ -471,9 +462,8 @@ export default function CheckoutPage() {
                         setCustomerInfo({ ...customerInfo, phone: e.target.value });
                         if (formErrors.phone) setFormErrors({ ...formErrors, phone: null });
                       }}
-                      className={`w-full px-3.5 py-2.5 text-xs sm:text-sm border rounded-sm focus:outline-none ${
-                        formErrors.phone ? "border-red-500 bg-red-50/20" : "border-stone-300 focus:border-[#BC8242]"
-                      }`}
+                      className={`w-full px-3.5 py-2.5 text-xs sm:text-sm border rounded-sm focus:outline-none ${formErrors.phone ? "border-red-500 bg-red-50/20" : "border-stone-300 focus:border-[#BC8242]"
+                        }`}
                     />
                     {formErrors.phone && (
                       <p className="text-[11px] text-red-500 mt-1">{formErrors.phone}</p>
@@ -507,11 +497,10 @@ export default function CheckoutPage() {
                       setCustomerInfo({ ...customerInfo, city: e.target.value });
                       if (formErrors.city) setFormErrors({ ...formErrors, city: null });
                     }}
-                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm border rounded-sm focus:outline-none mb-2 ${
-                      formErrors.city ? "border-red-500 bg-red-50/20" : "border-stone-300 focus:border-[#BC8242]"
-                    }`}
+                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm border rounded-sm focus:outline-none mb-2 ${formErrors.city ? "border-red-500 bg-red-50/20" : "border-stone-300 focus:border-[#BC8242]"
+                      }`}
                   />
-                  
+
                   {/* City Pills */}
                   <div className="flex flex-wrap gap-1.5">
                     {POPULAR_CITIES.map((c) => (
@@ -519,11 +508,10 @@ export default function CheckoutPage() {
                         key={c}
                         type="button"
                         onClick={() => handleSelectCity(c)}
-                        className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                          customerInfo.city.toLowerCase() === c.toLowerCase()
+                        className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${customerInfo.city.toLowerCase() === c.toLowerCase()
                             ? "bg-[#BC8242] text-white border-[#BC8242]"
                             : "bg-stone-50 text-stone-700 border-stone-200 hover:border-stone-400"
-                        }`}
+                          }`}
                       >
                         {c}
                       </button>
@@ -547,9 +535,8 @@ export default function CheckoutPage() {
                       setCustomerInfo({ ...customerInfo, address: e.target.value });
                       if (formErrors.address) setFormErrors({ ...formErrors, address: null });
                     }}
-                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm border rounded-sm focus:outline-none ${
-                      formErrors.address ? "border-red-500 bg-red-50/20" : "border-stone-300 focus:border-[#BC8242]"
-                    }`}
+                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm border rounded-sm focus:outline-none ${formErrors.address ? "border-red-500 bg-red-50/20" : "border-stone-300 focus:border-[#BC8242]"
+                      }`}
                   />
                   {formErrors.address && (
                     <p className="text-[11px] text-red-500 mt-1">{formErrors.address}</p>

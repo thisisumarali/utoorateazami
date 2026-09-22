@@ -11,6 +11,7 @@
   --border-subtle: #eae7e1;
   --border-light: #dfdbd3;
   --muted: #78716c;
+  --font-heading: var(--font-outfit);
 }
 
 body {
@@ -20,8 +21,12 @@ body {
   overflow-x: hidden;
 }
 
-h1, h2, h3, h4, .font-serif-luxury {
-  font-family: var(--font-heading), Georgia, "Times New Roman", serif;
+h1, h2, h3, h4, .font-heading, .font-outfit, .font-serif-luxury {
+  font-family: var(--font-outfit), var(--font-heading), 'Outfit', sans-serif;
+}
+
+.font-brand-serif, .font-playfair {
+  font-family: var(--font-playfair), Georgia, "Times New Roman", serif;
 }
 
 /* Custom scrollbar */

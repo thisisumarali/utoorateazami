@@ -25,25 +25,17 @@ export default function Footer({ onSelectCategory }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 pb-12 border-b border-stone-200">
           {/* Brand Col */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 overflow-hidden  flex items-center justify-center p-1">
+            <Link href="/" className="inline-block group" aria-label={SITE_CONFIG.name}>
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 aspect-square flex items-center justify-start shrink-0 transition-transform duration-300 group-hover:scale-105">
                 <Image
                   src={SITE_CONFIG.logoUrl}
                   alt={SITE_CONFIG.name}
-                  width={48}
-                  height={48}
+                  fill
+                  sizes="(max-width: 640px) 64px, 80px"
                   className="object-contain"
                 />
               </div>
-              <div>
-                <span className="font-serif-luxury text-lg font-bold tracking-wider text-stone-900 uppercase block">
-                  Utoorat e Azami
-                </span>
-                <span className="text-[10px] tracking-[0.2em] text-[#BC8242] uppercase font-semibold">
-                  {SITE_CONFIG.arabicName}
-                </span>
-              </div>
-            </div>
+            </Link>
             <p className="text-xs text-stone-600 leading-relaxed">
               Timeless Collections For Essence Enthusiasts. We craft 100% pure non-alcoholic concentrated perfume oils and artisanal attars celebrating traditional oriental perfumery.
             </p>

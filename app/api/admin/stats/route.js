@@ -83,7 +83,7 @@ export async function GET() {
       FROM utoor_orders
       ORDER BY created_at DESC
       LIMIT 6;
-    `);
+    `).catch(() => ({ rows: [] }));
 
     // 5. Recent 4 Contact Inquiries
     const recentMessagesRes = await query(`
@@ -99,7 +99,7 @@ export async function GET() {
       FROM utoor_activity_logs
       ORDER BY created_at DESC
       LIMIT 6;
-    `);
+    `).catch(() => ({ rows: [] }));
 
     // 7. Top Products (from live products)
     const topProdsRes = await query(`
@@ -107,11 +107,11 @@ export async function GET() {
       FROM products
       ORDER BY rating DESC, reviews_count DESC
       LIMIT 5;
-    `);
+    `).catch(() => ({ rows: [] }));
 
-    const ordRow = ordersRes.rows[0];
-    const prodRow = prodsRes.rows[0];
-    const msgRow = messagesRes.rows[0] || { total_messages: 0, unread_messages: 0 };
+    const ordRow = ordersRes.rows?.[0] || {};
+    const prodRow = prodsRes.rows?.[0] || {};
+    const msgRow = messagesRes.rows?.[0] || { total_messages: 0, unread_messages: 0 };
 
     return NextResponse.json({
       dbConnected: true,

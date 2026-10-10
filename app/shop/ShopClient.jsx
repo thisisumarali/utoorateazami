@@ -68,8 +68,8 @@ export default function ShopClient() {
     async function loadData() {
       try {
         const [catRes, prodRes] = await Promise.all([
-          fetch("/api/categories"),
-          fetch("/api/products"),
+          fetch("/api/categories", { cache: "no-store" }),
+          fetch("/api/products", { cache: "no-store" }),
         ]);
         const catData = await catRes.json();
         const prodData = await prodRes.json();

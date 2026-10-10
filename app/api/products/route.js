@@ -2,6 +2,15 @@ import { NextResponse } from "next/server";
 import { query, testDbConnection } from "@/lib/db";
 import { PRODUCTS } from "@/data/storeData";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+const noCacheHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+  "CDN-Cache-Control": "no-store",
+  "Vercel-CDN-Cache-Control": "no-store",
+};
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const tag = searchParams.get("tag");
@@ -36,7 +45,10 @@ export async function GET(request) {
       });
     }
 
-    return NextResponse.json({ products: prods, source: "fallback" });
+    return NextResponse.json(
+      { products: prods, source: "fallback" },
+      { headers: noCacheHeaders }
+    );
   }
 
   try {
@@ -107,16 +119,19 @@ export async function GET(request) {
 
     const res = await query(sql, params);
 
-    return NextResponse.json({
-      products: res.rows.length > 0 ? res.rows : [],
-      source: "postgres",
-      count: res.rows.length,
-    });
+    return NextResponse.json(
+      {
+        products: res.rows.length > 0 ? res.rows : [],
+        source: "postgres",
+        count: res.rows.length,
+      },
+      { headers: noCacheHeaders }
+    );
   } catch (err) {
     console.error("Products API error:", err);
     return NextResponse.json(
       { products: PRODUCTS, source: "fallback", error: err.message },
-      { status: 500 }
+      { status: 500, headers: noCacheHeaders }
     );
   }
 }

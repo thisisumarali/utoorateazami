@@ -2,6 +2,15 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { deleteCloudinaryImage } from "@/lib/cloudinary";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+const noCacheHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+  "CDN-Cache-Control": "no-store",
+  "Vercel-CDN-Cache-Control": "no-store",
+};
+
 export async function GET(request, { params }) {
   const { id } = await params;
   try {
@@ -25,12 +34,12 @@ export async function GET(request, { params }) {
     );
 
     if (res.rows.length === 0) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      return NextResponse.json({ error: "Product not found" }, { status: 404, headers: noCacheHeaders });
     }
 
-    return NextResponse.json({ product: res.rows[0] });
+    return NextResponse.json({ product: res.rows[0] }, { headers: noCacheHeaders });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: 500, headers: noCacheHeaders });
   }
 }
 

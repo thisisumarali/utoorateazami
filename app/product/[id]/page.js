@@ -109,6 +109,70 @@ async function getProduct(id) {
   return null;
 }
 
+async function getRelatedProducts(product) {
+  try {
+    const dbStatus = await testDbConnection();
+    if (dbStatus.connected) {
+      const res = await query(
+        `SELECT p.*,
+          COALESCE(
+            (SELECT json_agg(c.id) FROM product_categories pc JOIN categories c ON c.id = pc.category_id WHERE pc.product_id = p.id),
+            '[]'::json
+          ) AS category_ids
+        FROM products p
+        WHERE p.id != $1
+        ORDER BY 
+          CASE WHEN p.category = $2 THEN 0 ELSE 1 END,
+          p.in_stock DESC,
+          p.rating DESC
+        LIMIT 4;`,
+        [product.id, product.category || ""]
+      );
+
+      if (res.rows.length > 0) {
+        return res.rows.map((row) => ({
+          id: row.id,
+          name: row.name,
+          category: row.category,
+          categoryDisplay: row.category_display || row.category,
+          priceDisplay: row.price_display || `Rs${row.min_price} – Rs${row.max_price}`,
+          minPrice: parseFloat(row.min_price) || 500,
+          maxPrice: parseFloat(row.max_price) || 2000,
+          saleBadge: row.sale_badge,
+          inspiredBy: row.inspired_by,
+          image: row.image,
+          inStock: row.in_stock !== false,
+          in_stock: row.in_stock !== false,
+          variants: typeof row.variants === "string" ? JSON.parse(row.variants) : row.variants || [],
+        }));
+      }
+    }
+  } catch (e) {
+    // Fallback below
+  }
+
+  // Fallback to static
+  const otherProducts = PRODUCTS.filter((p) => p.id !== product.id);
+  const matchingProducts = otherProducts.filter((p) => {
+    const sharesCategory = p.category === product.category;
+    const sharesTag =
+      p.tags &&
+      product.tags &&
+      Array.isArray(product.tags) &&
+      p.tags.some((t) => product.tags.includes(t));
+    return sharesCategory || sharesTag;
+  });
+
+  const related = [...matchingProducts];
+  for (const p of otherProducts) {
+    if (related.length >= 4) break;
+    if (!related.some((r) => r.id === p.id)) {
+      related.push(p);
+    }
+  }
+  return related.slice(0, 4);
+}
+
 // Dynamic SEO metadata per product
 export async function generateMetadata({ params }) {
   const { id } = await params;
@@ -148,31 +212,12 @@ export default async function ProductPage({ params }) {
     notFound();
   }
 
-  // Find up to 4 related products sharing category or tags
-  const otherProducts = PRODUCTS.filter((p) => p.id !== product.id);
-  const matchingProducts = otherProducts.filter((p) => {
-    const sharesCategory = p.category === product.category;
-    const sharesTag =
-      p.tags &&
-      product.tags &&
-      Array.isArray(product.tags) &&
-      p.tags.some((t) => product.tags.includes(t));
-    return sharesCategory || sharesTag;
-  });
-
-  // Fill up to 4 products if matching ones are fewer
-  const relatedProducts = [...matchingProducts];
-  for (const p of otherProducts) {
-    if (relatedProducts.length >= 4) break;
-    if (!relatedProducts.some((r) => r.id === p.id)) {
-      relatedProducts.push(p);
-    }
-  }
+  const relatedProducts = await getRelatedProducts(product);
 
   return (
     <ProductDetailClient
       product={product}
-      relatedProducts={relatedProducts.slice(0, 4)}
+      relatedProducts={relatedProducts}
     />
   );
 }

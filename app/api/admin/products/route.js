@@ -2,6 +2,15 @@ import { NextResponse } from "next/server";
 import { query, testDbConnection } from "@/lib/db";
 import { PRODUCTS } from "@/data/storeData";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+const noCacheHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+  "CDN-Cache-Control": "no-store",
+  "Vercel-CDN-Cache-Control": "no-store",
+};
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category");
@@ -26,11 +35,14 @@ export async function GET(request) {
       const q = search.trim().toLowerCase();
       filtered = filtered.filter((p) => p.name.toLowerCase().includes(q));
     }
-    return NextResponse.json({
-      dbConnected: false,
-      products: filtered,
-      hint: dbStatus.hint,
-    });
+    return NextResponse.json(
+      {
+        dbConnected: false,
+        products: filtered,
+        hint: dbStatus.hint,
+      },
+      { headers: noCacheHeaders }
+    );
   }
 
   try {
@@ -82,15 +94,18 @@ export async function GET(request) {
 
     const res = await query(sql, params);
 
-    return NextResponse.json({
-      dbConnected: true,
-      products: res.rows,
-    });
+    return NextResponse.json(
+      {
+        dbConnected: true,
+        products: res.rows,
+      },
+      { headers: noCacheHeaders }
+    );
   } catch (err) {
     console.error("Products list error:", err);
     return NextResponse.json(
       { error: "Failed to fetch products", details: err.message },
-      { status: 500 }
+      { status: 500, headers: noCacheHeaders }
     );
   }
 }

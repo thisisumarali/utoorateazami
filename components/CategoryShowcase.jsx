@@ -11,7 +11,7 @@ export default function CategoryShowcase({ onSelectCategory }) {
 
   useEffect(() => {
     let isMounted = true;
-    fetch("/api/categories")
+    fetch("/api/categories", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         if (isMounted && data.mainCategories && data.mainCategories.length > 0) {

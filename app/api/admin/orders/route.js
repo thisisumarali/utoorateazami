@@ -2,6 +2,15 @@ import { NextResponse } from "next/server";
 import { query, testDbConnection } from "@/lib/db";
 import { generateOrderId } from "@/utils/orderStorage";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+const noCacheHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+  "CDN-Cache-Control": "no-store",
+  "Vercel-CDN-Cache-Control": "no-store",
+};
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
@@ -9,12 +18,15 @@ export async function GET(request) {
 
   const dbStatus = await testDbConnection();
   if (!dbStatus.connected) {
-    return NextResponse.json({
-      dbConnected: false,
-      orders: [],
-      error: dbStatus.error,
-      hint: dbStatus.hint,
-    });
+    return NextResponse.json(
+      {
+        dbConnected: false,
+        orders: [],
+        error: dbStatus.error,
+        hint: dbStatus.hint,
+      },
+      { headers: noCacheHeaders }
+    );
   }
 
   try {
@@ -48,15 +60,18 @@ export async function GET(request) {
 
     const res = await query(sql, params);
 
-    return NextResponse.json({
-      dbConnected: true,
-      orders: res.rows,
-    });
+    return NextResponse.json(
+      {
+        dbConnected: true,
+        orders: res.rows,
+      },
+      { headers: noCacheHeaders }
+    );
   } catch (err) {
     console.error("Orders list error:", err);
     return NextResponse.json(
       { error: "Failed to fetch orders", details: err.message },
-      { status: 500 }
+      { status: 500, headers: noCacheHeaders }
     );
   }
 }
@@ -114,8 +129,8 @@ export async function POST(request) {
       subtotal || 0,
       discount_amount || 0,
       discount_percent || 0,
-      shippingFee || 0,
-      grandTotal || subtotal,
+      shipping_fee || 0,
+      grand_total || subtotal,
       status || "Confirmed",
     ];
 

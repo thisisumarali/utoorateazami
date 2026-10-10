@@ -76,7 +76,7 @@ export default function Navbar({
 
   useEffect(() => {
     let isMounted = true;
-    fetch("/api/categories")
+    fetch("/api/categories", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         const cats = data.categories || data.mainCategories;

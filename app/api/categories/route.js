@@ -2,6 +2,15 @@ import { NextResponse } from "next/server";
 import { query, testDbConnection } from "@/lib/db";
 import { CATEGORIES } from "@/data/storeData";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+const noCacheHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+  "CDN-Cache-Control": "no-store",
+  "Vercel-CDN-Cache-Control": "no-store",
+};
+
 export async function GET() {
   const dbStatus = await testDbConnection();
 
@@ -16,13 +25,16 @@ export async function GET() {
       status: "Active",
     }));
 
-    return NextResponse.json({
-      dbConnected: false,
-      categories: formatted,
-      mainCategories: formatted,
-      subcategories: [],
-      source: "fallback",
-    });
+    return NextResponse.json(
+      {
+        dbConnected: false,
+        categories: formatted,
+        mainCategories: formatted,
+        subcategories: [],
+        source: "fallback",
+      },
+      { headers: noCacheHeaders }
+    );
   }
 
   try {
@@ -46,21 +58,27 @@ export async function GET() {
       ORDER BY c.sort_order ASC, c.name ASC;
     `);
 
-    return NextResponse.json({
-      dbConnected: true,
-      categories: res.rows,
-      mainCategories: res.rows,
-      subcategories: [],
-      source: "postgres",
-    });
+    return NextResponse.json(
+      {
+        dbConnected: true,
+        categories: res.rows,
+        mainCategories: res.rows,
+        subcategories: [],
+        source: "postgres",
+      },
+      { headers: noCacheHeaders }
+    );
   } catch (err) {
     console.error("Public categories API error:", err);
-    return NextResponse.json({
-      dbConnected: false,
-      categories: CATEGORIES,
-      mainCategories: CATEGORIES,
-      subcategories: [],
-      error: err.message,
-    });
+    return NextResponse.json(
+      {
+        dbConnected: false,
+        categories: CATEGORIES,
+        mainCategories: CATEGORIES,
+        subcategories: [],
+        error: err.message,
+      },
+      { headers: noCacheHeaders }
+    );
   }
 }

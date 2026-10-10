@@ -2,46 +2,58 @@ import { NextResponse } from "next/server";
 import { query, testDbConnection } from "@/lib/db";
 import { PRODUCTS } from "@/data/storeData";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+const noCacheHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+  "CDN-Cache-Control": "no-store",
+  "Vercel-CDN-Cache-Control": "no-store",
+};
+
 export async function GET() {
   const dbStatus = await testDbConnection();
 
   if (!dbStatus.connected) {
     // Return gracefully formatted fallback stats
-    return NextResponse.json({
-      dbConnected: false,
-      dbError: dbStatus.error,
-      dbHint: dbStatus.hint,
-      stats: {
-        totalRevenue: 9675,
-        totalOrders: 3,
-        ordersBreakdown: {
-          confirmed: 1,
-          shipped: 1,
-          delivered: 1,
-          cancelled: 0,
+    return NextResponse.json(
+      {
+        dbConnected: false,
+        dbError: dbStatus.error,
+        dbHint: dbStatus.hint,
+        stats: {
+          totalRevenue: 9675,
+          totalOrders: 3,
+          ordersBreakdown: {
+            confirmed: 1,
+            shipped: 1,
+            delivered: 1,
+            cancelled: 0,
+          },
+          totalProducts: PRODUCTS.length,
+          outOfStockCount: 0,
+          averageOrderValue: 3225,
         },
-        totalProducts: PRODUCTS.length,
-        outOfStockCount: 0,
-        averageOrderValue: 3225,
+        recentOrders: [],
+        topProducts: PRODUCTS.slice(0, 4).map((p) => ({
+          id: p.id,
+          name: p.name,
+          category: p.categoryDisplay || "Attar",
+          price: p.minPrice,
+          salesCount: 14,
+          image: p.image,
+        })),
+        activityLogs: [
+          {
+            id: 1,
+            action: "SYSTEM_ALERT",
+            details: "PostgreSQL configuration required. Update .env to activate live DB sync.",
+            created_at: new Date().toISOString(),
+          },
+        ],
       },
-      recentOrders: [],
-      topProducts: PRODUCTS.slice(0, 4).map((p) => ({
-        id: p.id,
-        name: p.name,
-        category: p.categoryDisplay || "Attar",
-        price: p.minPrice,
-        salesCount: 14,
-        image: p.image,
-      })),
-      activityLogs: [
-        {
-          id: 1,
-          action: "SYSTEM_ALERT",
-          details: "PostgreSQL configuration required. Update .env to activate live DB sync.",
-          created_at: new Date().toISOString(),
-        },
-      ],
-    });
+      { headers: noCacheHeaders }
+    );
   }
 
   try {
@@ -113,46 +125,49 @@ export async function GET() {
     const prodRow = prodsRes.rows?.[0] || {};
     const msgRow = messagesRes.rows?.[0] || { total_messages: 0, unread_messages: 0 };
 
-    return NextResponse.json({
-      dbConnected: true,
-      dbInfo: {
-        database: dbStatus.database,
-        user: dbStatus.user,
-        version: dbStatus.version,
-      },
-      stats: {
-        totalRevenue: Math.round(parseFloat(ordRow.total_revenue || 0)),
-        totalOrders: parseInt(ordRow.total_orders || 0, 10),
-        ordersBreakdown: {
-          confirmed: parseInt(ordRow.confirmed_count || 0, 10),
-          processing: parseInt(ordRow.processing_count || 0, 10),
-          shipped: parseInt(ordRow.shipped_count || 0, 10),
-          delivered: parseInt(ordRow.delivered_count || 0, 10),
-          cancelled: parseInt(ordRow.cancelled_count || 0, 10),
+    return NextResponse.json(
+      {
+        dbConnected: true,
+        dbInfo: {
+          database: dbStatus.database,
+          user: dbStatus.user,
+          version: dbStatus.version,
         },
-        totalProducts: parseInt(prodRow.total_products || 0, 10),
-        outOfStockCount: parseInt(prodRow.out_of_stock || 0, 10),
-        averageOrderValue: Math.round(parseFloat(ordRow.avg_order_value || 0)),
-        totalMessages: parseInt(msgRow.total_messages || 0, 10),
-        unreadMessages: parseInt(msgRow.unread_messages || 0, 10),
+        stats: {
+          totalRevenue: Math.round(parseFloat(ordRow.total_revenue || 0)),
+          totalOrders: parseInt(ordRow.total_orders || 0, 10),
+          ordersBreakdown: {
+            confirmed: parseInt(ordRow.confirmed_count || 0, 10),
+            processing: parseInt(ordRow.processing_count || 0, 10),
+            shipped: parseInt(ordRow.shipped_count || 0, 10),
+            delivered: parseInt(ordRow.delivered_count || 0, 10),
+            cancelled: parseInt(ordRow.cancelled_count || 0, 10),
+          },
+          totalProducts: parseInt(prodRow.total_products || 0, 10),
+          outOfStockCount: parseInt(prodRow.out_of_stock || 0, 10),
+          averageOrderValue: Math.round(parseFloat(ordRow.avg_order_value || 0)),
+          totalMessages: parseInt(msgRow.total_messages || 0, 10),
+          unreadMessages: parseInt(msgRow.unread_messages || 0, 10),
+        },
+        recentOrders: recentOrdersRes.rows,
+        recentMessages: recentMessagesRes.rows,
+        topProducts: topProdsRes.rows.map((p) => ({
+          id: p.id,
+          name: p.name,
+          category: p.category_display,
+          price: p.min_price,
+          image: p.image,
+          inStock: p.in_stock,
+        })),
+        activityLogs: logsRes.rows,
       },
-      recentOrders: recentOrdersRes.rows,
-      recentMessages: recentMessagesRes.rows,
-      topProducts: topProdsRes.rows.map((p) => ({
-        id: p.id,
-        name: p.name,
-        category: p.category_display,
-        price: p.min_price,
-        image: p.image,
-        inStock: p.in_stock,
-      })),
-      activityLogs: logsRes.rows,
-    });
+      { headers: noCacheHeaders }
+    );
   } catch (err) {
     console.error("Stats API error:", err);
     return NextResponse.json(
       { error: "Failed to calculate stats", details: err.message },
-      { status: 500 }
+      { status: 500, headers: noCacheHeaders }
     );
   }
 }

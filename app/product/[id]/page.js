@@ -3,6 +3,9 @@ import { PRODUCTS, SITE_CONFIG } from "@/data/storeData";
 import ProductDetailClient from "./ProductDetailClient";
 import { query, testDbConnection } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 // Pre-render all products at build time
 export function generateStaticParams() {
   return PRODUCTS.map((product) => ({

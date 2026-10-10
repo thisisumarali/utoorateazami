@@ -69,7 +69,7 @@ export default function CheckoutPage() {
   const subtotal = items.reduce((acc, it) => acc + it.price * it.quantity, 0);
   const discountAmount = Math.round((subtotal * discountPercent) / 100);
   const freeShipping = subtotal >= SITE_CONFIG.freeShippingThreshold;
-  const shippingFee = items.length === 0 ? 0 : freeShipping ? 0 : 250;
+  const shippingFee = items.length === 0 ? 0 : freeShipping ? 0 : (SITE_CONFIG.standardDeliveryFee || 350);
   const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee);
 
   // Apply Coupon

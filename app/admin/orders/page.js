@@ -158,7 +158,7 @@ function AdminOrdersContent() {
 
     setActionLoading(true);
     const subtotal = newOrder.items.reduce((acc, it) => acc + it.price * it.quantity, 0);
-    const shipping = parseInt(newOrder.shipping_fee, 10) || (subtotal >= 3000 ? 0 : 250);
+    const shipping = parseInt(newOrder.shipping_fee, 10) || (subtotal >= 3000 ? 0 : 350);
     const discount = parseInt(newOrder.discount_amount, 10) || 0;
     const grandTotal = Math.max(0, subtotal - discount + shipping);
 

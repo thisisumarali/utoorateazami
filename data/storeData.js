@@ -7,6 +7,7 @@ export const SITE_CONFIG = {
   whatsappMessage: "Hello! I am visiting Utoorat e Azami website and would like to inquire about your fragrances.",
   currency: "Rs",
   currencyFull: "PKR",
+  standardDeliveryFee: 350,
   freeShippingThreshold: 3000,
   announcement: "✨ Free Nationwide Delivery on Orders Above Rs. 3,000 | 100% Pure Alcohol-Free Attars",
   logoUrl: "/logo.png",

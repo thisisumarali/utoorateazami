@@ -72,7 +72,7 @@ export default function CartDrawer({
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const discountAmount = Math.round((subtotal * discountPercent) / 100);
   const freeShipping = subtotal >= SITE_CONFIG.freeShippingThreshold;
-  const shippingFee = items.length === 0 ? 0 : freeShipping ? 0 : 250;
+  const shippingFee = items.length === 0 ? 0 : freeShipping ? 0 : (SITE_CONFIG.standardDeliveryFee || 350);
   const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee);
   const progressPercent = Math.min(100, (subtotal / SITE_CONFIG.freeShippingThreshold) * 100);
   const remainingForFree = Math.max(0, SITE_CONFIG.freeShippingThreshold - subtotal);

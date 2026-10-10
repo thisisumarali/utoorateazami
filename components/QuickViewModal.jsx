@@ -1,11 +1,38 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { X, Star, ShoppingBag, Check, ShieldCheck, Clock, Sparkles, ZoomIn, Maximize2 } from "lucide-react";
+import { X, Star, ShoppingBag, Check, ShieldCheck, Clock, Sparkles, ZoomIn, Maximize2, AlertCircle } from "lucide-react";
 
 export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }) {
-  const [selectedSize, setSelectedSize] = useState(product?.variants?.[0]?.size || "3ml");
+  const variants = useMemo(() => {
+    if (Array.isArray(product?.variants)) return product.variants;
+    if (typeof product?.variants === "string") {
+      try {
+        return JSON.parse(product.variants);
+      } catch (e) {}
+    }
+    return [
+      { size: "3ml", price: 500, inStock: true },
+      { size: "6ml", price: 1000, inStock: true },
+      { size: "12ml", price: 2000, inStock: true },
+    ];
+  }, [product?.variants]);
+
+  // Helper to determine if a variant is in stock
+  const isVariantInStock = (v) => {
+    if (!v) return false;
+    if (product?.in_stock === false || product?.inStock === false) return false;
+    if (v.inStock === false || v.in_stock === false) return false;
+    if (v.status === "Out of Stock" || v.status === "out_of_stock") return false;
+    return true;
+  };
+
+  // Default to first AVAILABLE in-stock variant; fallback to first variant if all out of stock
+  const defaultSize =
+    variants.find((v) => isVariantInStock(v))?.size || variants[0]?.size || "3ml";
+
+  const [selectedSize, setSelectedSize] = useState(defaultSize);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(product?.image || "");
   const [addedSuccess, setAddedSuccess] = useState(false);
@@ -17,12 +44,14 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
   // Sync state whenever active product changes
   useEffect(() => {
     if (product) {
-      setSelectedSize(product.variants?.[0]?.size || "3ml");
+      const availSize =
+        variants.find((v) => isVariantInStock(v))?.size || variants[0]?.size || "3ml";
+      setSelectedSize(availSize);
       setQuantity(1);
       setActiveImage(product.image || "");
       setIsLightboxOpen(false);
     }
-  }, [product]);
+  }, [product, variants]);
 
   // Handle ESC key to dismiss modal or lightbox
   useEffect(() => {
@@ -42,9 +71,11 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
   if (!isOpen || !product) return null;
 
   const activeVariant =
-    product.variants.find((v) => v.size === selectedSize) || product.variants[0];
+    variants.find((v) => v.size === selectedSize) || variants[0] || { size: "3ml", price: 500 };
+  const isCurrentVariantInStock = isVariantInStock(activeVariant);
 
   const handleAdd = () => {
+    if (!isCurrentVariantInStock) return;
     onAddToCart({
       id: `${product.id}-${activeVariant.size}`,
       productId: product.id,
@@ -53,6 +84,7 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
       size: activeVariant.size,
       price: activeVariant.price,
       quantity: quantity,
+      inStock: true,
     });
     setAddedSuccess(true);
     setTimeout(() => {
@@ -186,13 +218,18 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
                 )}
 
                 {/* Price display based on variant */}
-                <div className="flex items-baseline gap-2.5 mt-2">
+                <div className="flex items-center gap-2.5 mt-2 flex-wrap">
                   <span className="text-xl sm:text-2xl font-serif-luxury font-bold text-[#BC8242]">
                     Rs{activeVariant.price.toLocaleString()}.00
                   </span>
                   {activeVariant.regularPrice && (
                     <span className="text-xs sm:text-sm text-stone-400 line-through">
                       Rs{activeVariant.regularPrice.toLocaleString()}.00
+                    </span>
+                  )}
+                  {!isCurrentVariantInStock && (
+                    <span className="px-2 py-0.5 text-xs font-bold uppercase tracking-wider rounded-xs bg-rose-50 text-rose-700 border border-rose-200">
+                      Out of Stock
                     </span>
                   )}
                 </div>
@@ -202,54 +239,87 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
                   {product.description}
                 </p>
 
-                {/* Fragrance Notes / Pyramid */}
-                {product.pyramid && (
+                {/* Fragrance Notes / Pyramid - Only shown if notes are actually provided */}
+                {product.pyramid && (product.pyramid.top?.trim() || product.pyramid.heart?.trim() || product.pyramid.base?.trim()) && (
                   <div className="mt-3 p-2.5 sm:p-3 bg-stone-50 rounded-xs border border-stone-200/80 space-y-1 text-xs">
                     <div className="font-semibold text-stone-800 text-[10px] sm:text-[11px] uppercase tracking-wider flex items-center gap-1 text-[#BC8242]">
                       <Sparkles size={12} /> Olfactory Notes
                     </div>
-                    <div className="text-[11px] text-stone-600">
-                      <strong>Top:</strong> {product.pyramid.top}
-                    </div>
-                    <div className="text-[11px] text-stone-600">
-                      <strong>Heart:</strong> {product.pyramid.heart}
-                    </div>
-                    <div className="text-[11px] text-stone-600">
-                      <strong>Base:</strong> {product.pyramid.base}
-                    </div>
+                    {product.pyramid.top?.trim() && (
+                      <div className="text-[11px] text-stone-600">
+                        <strong>Top:</strong> {product.pyramid.top}
+                      </div>
+                    )}
+                    {product.pyramid.heart?.trim() && (
+                      <div className="text-[11px] text-stone-600">
+                        <strong>Heart:</strong> {product.pyramid.heart}
+                      </div>
+                    )}
+                    {product.pyramid.base?.trim() && (
+                      <div className="text-[11px] text-stone-600">
+                        <strong>Base:</strong> {product.pyramid.base}
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {/* Variant Selector */}
                 <div className="mt-3">
-                  <label className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-stone-800 block mb-1.5">
-                    Select Bottle Size / Presentation:
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-stone-800">
+                      Select Bottle Size / Presentation:
+                    </label>
+                    {!isCurrentVariantInStock && (
+                      <span className="text-[10px] font-semibold text-rose-600 flex items-center gap-1">
+                        <AlertCircle size={11} /> Size unavailable
+                      </span>
+                    )}
+                  </div>
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                    {product.variants.map((v) => (
-                      <button
-                        key={v.size}
-                        onClick={() => setSelectedSize(v.size)}
-                        className={`px-3 py-1.5 text-xs font-semibold rounded-xs border transition-all ${
-                          selectedSize === v.size
-                            ? "bg-stone-900 border-stone-900 text-white shadow-xs"
-                            : "border-stone-300 bg-white text-stone-700 hover:border-stone-400"
-                        }`}
-                      >
-                        {v.size} - Rs{v.price.toLocaleString()}
-                      </button>
-                    ))}
+                    {variants.map((v) => {
+                      const inStock = isVariantInStock(v);
+                      const isSelected = selectedSize === v.size;
+                      return (
+                        <button
+                          key={v.size}
+                          onClick={() => setSelectedSize(v.size)}
+                          className={`px-3 py-1.5 text-xs font-semibold rounded-xs border transition-all flex items-center gap-1.5 ${
+                            isSelected
+                              ? !inStock
+                                ? "bg-stone-800 border-stone-800 text-stone-200 shadow-xs"
+                                : "bg-stone-900 border-stone-900 text-white shadow-xs"
+                              : !inStock
+                              ? "border-stone-200 bg-stone-100/80 text-stone-400 hover:border-stone-300"
+                              : "border-stone-300 bg-white text-stone-700 hover:border-stone-400"
+                          }`}
+                        >
+                          <span className={!inStock && !isSelected ? "line-through" : ""}>
+                            {v.size} - Rs{v.price.toLocaleString()}
+                          </span>
+                          {!inStock && (
+                            <span className="text-[9px] uppercase font-bold text-rose-700 bg-rose-100/90 px-1 py-0.2 rounded">
+                              Sold Out
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Desktop Quantity Stepper */}
-                <div className="hidden sm:flex items-center gap-3 mt-3">
+                <div
+                  className={`hidden sm:flex items-center gap-3 mt-3 transition-opacity ${
+                    !isCurrentVariantInStock ? "opacity-40 pointer-events-none" : ""
+                  }`}
+                >
                   <label className="text-xs font-semibold uppercase tracking-wider text-stone-800">
                     Qty:
                   </label>
                   <div className="flex items-center border border-stone-300 rounded-xs">
                     <button
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      disabled={!isCurrentVariantInStock}
                       className="px-2.5 py-1 text-stone-600 hover:bg-stone-100 transition-colors"
                     >
                       -
@@ -259,6 +329,7 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
                     </span>
                     <button
                       onClick={() => setQuantity((q) => q + 1)}
+                      disabled={!isCurrentVariantInStock}
                       className="px-2.5 py-1 text-stone-600 hover:bg-stone-100 transition-colors"
                     >
                       +
@@ -274,9 +345,14 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
         <div className="border-t border-stone-200 bg-white p-3 sm:p-4 z-20 shrink-0">
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Mobile Quantity Stepper */}
-            <div className="sm:hidden flex items-center border border-stone-300 rounded-xs shrink-0">
+            <div
+              className={`sm:hidden flex items-center border border-stone-300 rounded-xs shrink-0 ${
+                !isCurrentVariantInStock ? "opacity-40 pointer-events-none" : ""
+              }`}
+            >
               <button
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                disabled={!isCurrentVariantInStock}
                 className="px-2 py-2 text-stone-600 active:bg-stone-100"
                 aria-label="Decrease quantity"
               >
@@ -287,6 +363,7 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
               </span>
               <button
                 onClick={() => setQuantity((q) => q + 1)}
+                disabled={!isCurrentVariantInStock}
                 className="px-2 py-2 text-stone-600 active:bg-stone-100"
                 aria-label="Increase quantity"
               >
@@ -297,14 +374,20 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
             {/* Add to Cart Button */}
             <button
               onClick={handleAdd}
-              disabled={addedSuccess}
-              className={`flex-1 py-2.5 sm:py-3 px-3 rounded-full text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 sm:gap-2 transition-all shadow-md ${
-                addedSuccess
-                  ? "bg-emerald-600 text-white"
-                  : "bg-[#BC8242] hover:bg-[#a66f33] active:bg-[#925c27] text-white"
+              disabled={!isCurrentVariantInStock || addedSuccess}
+              className={`flex-1 py-2.5 sm:py-3 px-3 rounded-full text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 sm:gap-2 transition-all ${
+                !isCurrentVariantInStock
+                  ? "bg-stone-200 text-stone-400 border border-stone-300 cursor-not-allowed shadow-none"
+                  : addedSuccess
+                  ? "bg-emerald-600 text-white shadow-md"
+                  : "bg-[#BC8242] hover:bg-[#a66f33] active:bg-[#925c27] text-white shadow-md"
               }`}
             >
-              {addedSuccess ? (
+              {!isCurrentVariantInStock ? (
+                <>
+                  <AlertCircle size={15} /> Out of Stock ({activeVariant.size})
+                </>
+              ) : addedSuccess ? (
                 <>
                   <Check size={16} /> Added!
                 </>

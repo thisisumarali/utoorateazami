@@ -54,20 +54,10 @@ export default function CheckoutPage() {
     try {
       const saved = localStorage.getItem("utoorateazami_cart");
       if (saved) {
-        setItems(JSON.parse(saved));
-      } else {
-        // Fallback demo item if cart empty
-        setItems([
-          {
-            id: "silver-oud-3ml",
-            productId: "silver-oud",
-            name: "SILVER OUD",
-            image: "https://utoorateazami.com/wp-content/uploads/2024/09/74-1024x1024.png",
-            size: "3ml",
-            price: 500,
-            quantity: 1,
-          },
-        ]);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setItems(parsed);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -83,8 +73,27 @@ export default function CheckoutPage() {
   const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee);
 
   // Apply Coupon
-  const applyCoupon = () => {
+  const applyCoupon = async () => {
     const code = couponCode.trim().toUpperCase();
+    if (!code) return;
+
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setDiscountPercent(data.percent);
+        setCouponSuccess(data.label);
+        setCouponError("");
+        return;
+      }
+    } catch (err) {
+      // Fallback below
+    }
+
     if (VALID_PROMOS[code]) {
       setDiscountPercent(VALID_PROMOS[code].percent);
       setCouponSuccess(VALID_PROMOS[code].label);
@@ -126,51 +135,62 @@ export default function CheckoutPage() {
   };
 
   // Place COD Order
-  const handlePlaceOrder = (e) => {
+  const handlePlaceOrder = async (e) => {
     if (e) e.preventDefault();
     if (!validateForm()) return;
     if (items.length === 0) return;
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const orderId = generateOrderId();
-      const orderData = {
-        orderId,
-        createdAt: new Date().toISOString(),
-        formattedDate: new Date().toLocaleDateString("en-PK", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        customer: {
-          name: customerInfo.name.trim(),
-          phone: customerInfo.phone.trim(),
-          email: customerInfo.email.trim(),
-          city: customerInfo.city.trim(),
-          address: customerInfo.address.trim(),
-          notes: customerInfo.notes.trim(),
-        },
-        items: [...items],
-        paymentMethod: "Cash on Delivery (COD)",
-        subtotal,
-        discountAmount,
-        discountPercent,
-        shippingFee,
-        grandTotal,
-        status: "Confirmed",
-      };
+    const orderId = generateOrderId();
+    const orderData = {
+      orderId,
+      createdAt: new Date().toISOString(),
+      formattedDate: new Date().toLocaleDateString("en-PK", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      customer: {
+        name: customerInfo.name.trim(),
+        phone: customerInfo.phone.trim(),
+        email: customerInfo.email.trim(),
+        city: customerInfo.city.trim(),
+        address: customerInfo.address.trim(),
+        notes: customerInfo.notes.trim(),
+      },
+      items: [...items],
+      paymentMethod: "Cash on Delivery (COD)",
+      subtotal,
+      discountAmount,
+      discountPercent,
+      shippingFee,
+      grandTotal,
+      status: "Confirmed",
+    };
 
-      // Save to localStorage
-      saveOrderToStorage(orderData);
+    try {
+      // Send to PostgreSQL database
+      await fetch("/api/orders/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+      });
+    } catch (err) {
+      console.warn("Could not save to PostgreSQL directly, falling back to local storage:", err);
+    }
+
+    // Save to localStorage
+    saveOrderToStorage(orderData);
+    try {
       localStorage.removeItem("utoorateazami_cart");
+    } catch (e) {}
 
-      setPlacedOrder(orderData);
-      setItems([]);
-      setIsSubmitting(false);
-    }, 700);
+    setPlacedOrder(orderData);
+    setItems([]);
+    setIsSubmitting(false);
   };
 
   const handleCopyOrderId = () => {

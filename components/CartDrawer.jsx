@@ -23,6 +23,7 @@ import {
   User,
   ExternalLink,
   Package,
+  AlertCircle,
 } from "lucide-react";
 import { SITE_CONFIG } from "@/data/storeData";
 import {
@@ -75,10 +76,30 @@ export default function CartDrawer({
   const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee);
   const progressPercent = Math.min(100, (subtotal / SITE_CONFIG.freeShippingThreshold) * 100);
   const remainingForFree = Math.max(0, SITE_CONFIG.freeShippingThreshold - subtotal);
+  const hasOutOfStockItems = items.some((i) => i.inStock === false || i.in_stock === false);
 
   // Apply Promo Code
-  const applyCoupon = () => {
+  const applyCoupon = async () => {
     const code = couponCode.trim().toUpperCase();
+    if (!code) return;
+
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setDiscountPercent(data.percent);
+        setCouponSuccess(data.label);
+        setCouponError("");
+        return;
+      }
+    } catch (err) {
+      // Fallback below
+    }
+
     if (VALID_PROMOS[code]) {
       setDiscountPercent(VALID_PROMOS[code].percent);
       setCouponSuccess(VALID_PROMOS[code].label);
@@ -122,51 +143,61 @@ export default function CartDrawer({
   };
 
   // Handle Place Order (Cash on Delivery)
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
+    if (hasOutOfStockItems) return;
     if (!validateForm()) return;
     if (items.length === 0) return;
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const orderId = generateOrderId();
-      const orderData = {
-        orderId,
-        createdAt: new Date().toISOString(),
-        formattedDate: new Date().toLocaleDateString("en-PK", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        customer: {
-          name: customerInfo.name.trim(),
-          phone: customerInfo.phone.trim(),
-          email: customerInfo.email.trim(),
-          city: customerInfo.city.trim(),
-          address: customerInfo.address.trim(),
-          notes: customerInfo.notes.trim(),
-        },
-        items: [...items],
-        paymentMethod: "Cash on Delivery (COD)",
-        subtotal,
-        discountAmount,
-        discountPercent,
-        shippingFee,
-        grandTotal,
-        status: "Confirmed",
-      };
+    const orderId = generateOrderId();
+    const orderData = {
+      orderId,
+      createdAt: new Date().toISOString(),
+      formattedDate: new Date().toLocaleDateString("en-PK", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      customer: {
+        name: customerInfo.name.trim(),
+        phone: customerInfo.phone.trim(),
+        email: customerInfo.email.trim(),
+        city: customerInfo.city.trim(),
+        address: customerInfo.address.trim(),
+        notes: customerInfo.notes.trim(),
+      },
+      items: [...items],
+      paymentMethod: "Cash on Delivery (COD)",
+      subtotal,
+      discountAmount,
+      discountPercent,
+      shippingFee,
+      grandTotal,
+      status: "Confirmed",
+    };
 
-      // Save to localStorage
-      saveOrderToStorage(orderData);
+    try {
+      // Send to PostgreSQL database so it shows in Admin Orders immediately
+      await fetch("/api/orders/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+      });
+    } catch (err) {
+      console.warn("Could not save to PostgreSQL directly, falling back to local storage:", err);
+    }
 
-      // Update state & clear cart
-      setPlacedOrder(orderData);
-      setIsSubmitting(false);
-      setCurrentStep("success");
-      if (onClearCart) onClearCart();
-    }, 700);
+    // Save to localStorage
+    saveOrderToStorage(orderData);
+
+    // Update state & clear cart
+    setPlacedOrder(orderData);
+    setIsSubmitting(false);
+    setCurrentStep("success");
+    if (onClearCart) onClearCart();
   };
 
   // Reset and Close
@@ -382,9 +413,16 @@ export default function CartDrawer({
                               </button>
                             </div>
 
-                            <span className="text-[11px] text-stone-500 block">
-                              Size: <strong className="text-stone-700">{item.size}</strong>
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[11px] text-stone-500 block">
+                                Size: <strong className="text-stone-700">{item.size}</strong>
+                              </span>
+                              {(item.inStock === false || item.in_stock === false) && (
+                                <span className="text-[9px] uppercase font-bold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.2 rounded-xs">
+                                  Out of Stock
+                                </span>
+                              )}
+                            </div>
 
                             <div className="flex justify-between items-center mt-2">
                               {/* Quantity Stepper */}
@@ -858,10 +896,22 @@ export default function CartDrawer({
                   </div>
                 </div>
 
+                {hasOutOfStockItems && (
+                  <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xs text-xs font-medium flex items-center gap-2 mb-2">
+                    <AlertCircle size={14} className="text-rose-600 shrink-0" />
+                    <span>One or more items in your cart are out of stock. Please remove them to proceed.</span>
+                  </div>
+                )}
+
                 <div className="pt-1">
                   <button
-                    onClick={() => setCurrentStep("checkout")}
-                    className="w-full py-3.5 rounded-full bg-stone-900 hover:bg-[#BC8242] text-white text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md active:scale-98"
+                    onClick={() => !hasOutOfStockItems && setCurrentStep("checkout")}
+                    disabled={hasOutOfStockItems}
+                    className={`w-full py-3.5 rounded-full text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                      hasOutOfStockItems
+                        ? "bg-stone-300 text-stone-500 cursor-not-allowed shadow-none"
+                        : "bg-stone-900 hover:bg-[#BC8242] text-white shadow-md active:scale-98"
+                    }`}
                   >
                     Proceed To Checkout (COD) <ArrowRight size={14} />
                   </button>

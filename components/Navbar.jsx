@@ -64,7 +64,7 @@ export default function Navbar({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const collectionItems = [
+  const [collectionItems, setCollectionItems] = useState([
     { label: "All Fragrances", id: "all" },
     { label: "Azamis Special", id: "azamis-special" },
     { label: "Best Sellers", id: "best-seller" },
@@ -72,7 +72,29 @@ export default function Navbar({
     { label: "Oud Collection", id: "oud" },
     { label: "Unisex Fragrances", id: "unisex" },
     { label: "Luxury Gift Sets", id: "gift-set" },
-  ];
+  ]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((data) => {
+        const cats = data.categories || data.mainCategories;
+        if (isMounted && Array.isArray(cats) && cats.length > 0) {
+          const items = [{ label: "All Fragrances", id: "all" }];
+          cats.forEach((c) => {
+            if (c.show_in_nav !== "No") {
+              items.push({ label: c.name, id: c.id });
+            }
+          });
+          setCollectionItems(items);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 w-full transition-all duration-300">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,13 +12,55 @@ export default function ProductCard({
   onAddToCart,
 }) {
   const router = useRouter();
+  const variants = useMemo(() => {
+    if (Array.isArray(product.variants)) return product.variants;
+    if (typeof product.variants === "string") {
+      try {
+        return JSON.parse(product.variants);
+      } catch (e) {}
+    }
+    return [
+      { size: "3ml", price: product.min_price || product.minPrice || 500 },
+      { size: "6ml", price: 1000 },
+      { size: "12ml", price: product.max_price || product.maxPrice || 2000 },
+    ];
+  }, [product.variants, product.min_price, product.minPrice, product.max_price, product.maxPrice]);
+
+  // Helper to check stock status
+  const isVariantInStock = (v) => {
+    if (!v) return false;
+    if (product.in_stock === false || product.inStock === false) return false;
+    if (v.inStock === false || v.in_stock === false) return false;
+    if (v.status === "Out of Stock" || v.status === "out_of_stock") return false;
+    return true;
+  };
+
+  // Check overall product stock (no variants in stock)
+  const isProductOutOfStock =
+    product.in_stock === false ||
+    product.inStock === false ||
+    (variants.length > 0 && variants.every((v) => !isVariantInStock(v)));
+
+  // Pick first available in-stock variant by default; fallback to first variant if all out of stock
+  const defaultVariant = useMemo(() => {
+    return variants.find((v) => isVariantInStock(v)) || variants[0] || { size: "3ml", price: 500 };
+  }, [variants, product.in_stock, product.inStock]);
+
   const [isHovered, setIsHovered] = useState(false);
-  const [selectedSize, setSelectedSize] = useState(product.variants[0]?.size || "3ml");
+  const [selectedSize, setSelectedSize] = useState(defaultVariant?.size || "3ml");
   const [addedAnimation, setAddedAnimation] = useState(false);
+
+  // Sync selected size if default available variant changes
+  useEffect(() => {
+    if (defaultVariant?.size) {
+      setSelectedSize(defaultVariant.size);
+    }
+  }, [defaultVariant?.size]);
 
   // Find active variant
   const activeVariant =
-    product.variants.find((v) => v.size === selectedSize) || product.variants[0];
+    variants.find((v) => v.size === selectedSize) || defaultVariant;
+  const isCurrentVariantInStock = isVariantInStock(activeVariant);
 
   const navigateToProduct = (e) => {
     if (e) e.stopPropagation();
@@ -27,6 +69,7 @@ export default function ProductCard({
 
   const handleQuickAdd = (e) => {
     e.stopPropagation();
+    if (!isCurrentVariantInStock) return;
     if (onAddToCart) {
       onAddToCart({
         id: `${product.id}-${activeVariant.size}`,
@@ -36,6 +79,7 @@ export default function ProductCard({
         size: activeVariant.size,
         price: activeVariant.price,
         quantity: 1,
+        inStock: true,
       });
       setAddedAnimation(true);
       setTimeout(() => setAddedAnimation(false), 1600);
@@ -53,12 +97,16 @@ export default function ProductCard({
     >
       {/* Product Image Container */}
       <div className="relative aspect-square w-full overflow-hidden bg-[#f7f6f2] rounded-xs border border-stone-200/80 transition-shadow group-hover:shadow-md">
-        {/* Sale Badge */}
-        {product.saleBadge && (
-          <span className="absolute top-2 left-2 z-20 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] uppercase font-bold tracking-wider bg-[#BC8242] text-white rounded-xs shadow-xs">
-            {product.saleBadge}
+        {/* Out of Stock or Sale Badge */}
+        {isProductOutOfStock ? (
+          <span className="absolute top-2 left-2 z-20 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] uppercase font-bold tracking-wider bg-stone-900/90 text-white rounded-xs shadow-xs border border-white/20">
+            Out of Stock
           </span>
-        )}
+        ) : (product.sale_badge || product.saleBadge) ? (
+          <span className="absolute top-2 left-2 z-20 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] uppercase font-bold tracking-wider bg-[#BC8242] text-white rounded-xs shadow-xs">
+            {product.sale_badge || product.saleBadge}
+          </span>
+        ) : null}
 
         {/* Quick View / Full Page Trigger */}
         <button
@@ -78,8 +126,8 @@ export default function ProductCard({
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className={`object-contain transition-transform duration-500 ease-out p-0.5 ${
-              isHovered ? "scale-108" : "scale-100"
-            }`}
+              isProductOutOfStock ? "grayscale-[20%] opacity-85" : ""
+            } ${isHovered ? "scale-108" : "scale-100"}`}
           />
         </div>
 
@@ -90,21 +138,29 @@ export default function ProductCard({
           }`}
         >
           {/* Quick Size Pills */}
-          {product.variants.length > 1 && (
+          {variants.length > 1 && (
             <div className="flex items-center justify-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-              {product.variants.map((v) => (
-                <button
-                  key={v.size}
-                  onClick={() => setSelectedSize(v.size)}
-                  className={`text-[10px] px-2 py-0.5 rounded-xs font-semibold tracking-wider transition-colors ${
-                    selectedSize === v.size
-                      ? "bg-stone-900 text-white"
-                      : "bg-stone-200/80 text-stone-700 hover:bg-stone-300"
-                  }`}
-                >
-                  {v.size}
-                </button>
-              ))}
+              {variants.map((v) => {
+                const inStock = isVariantInStock(v);
+                return (
+                  <button
+                    key={v.size}
+                    onClick={() => setSelectedSize(v.size)}
+                    className={`text-[10px] px-2 py-0.5 rounded-xs font-semibold tracking-wider transition-colors ${
+                      selectedSize === v.size
+                        ? inStock
+                          ? "bg-stone-900 text-white"
+                          : "bg-rose-900 text-rose-100"
+                        : inStock
+                        ? "bg-stone-200/80 text-stone-700 hover:bg-stone-300"
+                        : "bg-stone-200/60 text-stone-400 line-through"
+                    }`}
+                    title={inStock ? `${v.size}` : `${v.size} (Out of stock)`}
+                  >
+                    {v.size}
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -112,14 +168,18 @@ export default function ProductCard({
           <div className="flex items-center gap-1.5 w-full">
             <button
               onClick={handleQuickAdd}
-              disabled={addedAnimation}
+              disabled={addedAnimation || !isCurrentVariantInStock}
               className={`flex-1 py-1.5 px-2 rounded-xs text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all uppercase shadow-xs ${
-                addedAnimation
+                !isCurrentVariantInStock
+                  ? "bg-stone-300 text-stone-500 cursor-not-allowed border border-stone-300"
+                  : addedAnimation
                   ? "bg-emerald-600 text-white"
                   : "bg-[#BC8242] hover:bg-[#a1682a] text-white"
               }`}
             >
-              {addedAnimation ? (
+              {!isCurrentVariantInStock ? (
+                <span>Sold Out</span>
+              ) : addedAnimation ? (
                 <>
                   <Check size={14} /> Added
                 </>
@@ -152,24 +212,29 @@ export default function ProductCard({
         </Link>
 
         {/* Optional Inspired-by Note */}
-        {product.inspiredBy && (
+        {(product.inspired_by || product.inspiredBy) && (
           <div className="mt-1 flex items-center gap-1 text-[10px] sm:text-[11px] font-medium text-[#925c24] bg-[#fbf7f0] border border-[#BC8242]/25 px-1.5 py-0.5 rounded-xs tracking-tight shadow-xs group-hover:border-[#BC8242]/45 transition-colors">
             <Sparkles size={10} className="text-[#BC8242] shrink-0" />
-            <span className="truncate">{product.inspiredBy}</span>
+            <span className="truncate">{product.inspired_by || product.inspiredBy}</span>
           </div>
         )}
 
         <div className="flex items-baseline justify-between gap-1 mt-1 sm:mt-1.5">
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-stone-800 tracking-wider">
-              {product.priceDisplay}
+              {product.price_display || product.priceDisplay}
             </span>
-            {product.originalPrice && (
+            {(product.original_price || product.originalPrice) && (
               <span className="text-[10px] text-stone-400 line-through">
-                {product.originalPrice}
+                {product.original_price || product.originalPrice}
               </span>
             )}
           </div>
+          {isProductOutOfStock && (
+            <span className="text-[9px] uppercase font-bold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-xs shrink-0">
+              Sold Out
+            </span>
+          )}
         </div>
 
         {/* Mobile Dedicated Touch Actions */}

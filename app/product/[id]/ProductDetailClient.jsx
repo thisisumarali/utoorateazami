@@ -19,13 +19,27 @@ import {
   ZoomIn,
   X,
   ChevronRight,
+  AlertCircle,
 } from "lucide-react";
 
 export default function ProductDetailClient({ product, relatedProducts = [] }) {
   const router = useRouter();
   const { addToCart } = useCart();
 
-  const [selectedSize, setSelectedSize] = useState(product?.variants?.[0]?.size || "3ml");
+  // Helper to determine if a variant is in stock
+  const isVariantInStock = (v) => {
+    if (!v) return false;
+    if (product?.in_stock === false || product?.inStock === false) return false;
+    if (v.inStock === false || v.in_stock === false) return false;
+    if (v.status === "Out of Stock" || v.status === "out_of_stock") return false;
+    return true;
+  };
+
+  // Default to first AVAILABLE in-stock variant; fallback to first variant if all out of stock
+  const [selectedSize, setSelectedSize] = useState(() => {
+    const avail = product?.variants?.find((v) => isVariantInStock(v));
+    return avail?.size || product?.variants?.[0]?.size || "3ml";
+  });
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(product?.image || "");
   const [addedSuccess, setAddedSuccess] = useState(false);
@@ -34,7 +48,8 @@ export default function ProductDetailClient({ product, relatedProducts = [] }) {
   // Sync state if product changes
   useEffect(() => {
     if (product) {
-      setSelectedSize(product.variants?.[0]?.size || "3ml");
+      const avail = product.variants?.find((v) => isVariantInStock(v));
+      setSelectedSize(avail?.size || product.variants?.[0]?.size || "3ml");
       setQuantity(1);
       setActiveImage(product.image || "");
       setIsLightboxOpen(false);
@@ -57,8 +72,15 @@ export default function ProductDetailClient({ product, relatedProducts = [] }) {
   const displayImage = activeImage || product.image;
   const activeVariant =
     product.variants.find((v) => v.size === selectedSize) || product.variants[0];
+  const isCurrentVariantInStock = isVariantInStock(activeVariant);
+  const isProductOutOfStock =
+    product?.in_stock === false ||
+    product?.inStock === false ||
+    (product?.variants?.length > 0 && product.variants.every((v) => !isVariantInStock(v)));
 
   const handleAddToCart = () => {
+    if (!isCurrentVariantInStock) return;
+
     addToCart({
       id: `${product.id}-${activeVariant.size}`,
       productId: product.id,
@@ -111,12 +133,16 @@ export default function ProductDetailClient({ product, relatedProducts = [] }) {
                 className="relative aspect-square w-full rounded-xs border border-stone-200 overflow-hidden group/zoom shadow-sm bg-white cursor-zoom-in"
                 title="Click to expand full image"
               >
-                {/* Sale Badge */}
-                {product.saleBadge && (
+                {/* Out of Stock or Sale Badge */}
+                {isProductOutOfStock ? (
+                  <span className="absolute top-3.5 left-3.5 z-10 px-2.5 py-1 text-[11px] uppercase font-bold tracking-wider bg-stone-900 text-white rounded-xs shadow-md border border-white/20">
+                    Out of Stock
+                  </span>
+                ) : product.saleBadge ? (
                   <span className="absolute top-3.5 left-3.5 z-10 px-2.5 py-1 text-[11px] uppercase font-bold tracking-wider bg-[#BC8242] text-white rounded-xs shadow-md">
                     {product.saleBadge}
                   </span>
-                )}
+                ) : null}
 
                 {/* Big Full-bleed Product Image */}
                 {displayImage && (
@@ -211,8 +237,8 @@ export default function ProductDetailClient({ product, relatedProducts = [] }) {
               </div>
 
               {/* Price display based on variant */}
-              <div className="flex items-baseline gap-3 py-1 border-b border-stone-200">
-                <span className="text-2xl sm:text-3xl font-serif-luxury font-bold text-[#BC8242]">
+              <div className="flex items-center gap-3 py-1 border-b border-stone-200 flex-wrap">
+                <span className={`text-2xl sm:text-3xl font-serif-luxury font-bold ${isCurrentVariantInStock ? "text-[#BC8242]" : "text-stone-400"}`}>
                   Rs{activeVariant.price.toLocaleString()}.00
                 </span>
                 {activeVariant.regularPrice && (
@@ -220,11 +246,16 @@ export default function ProductDetailClient({ product, relatedProducts = [] }) {
                     Rs{activeVariant.regularPrice.toLocaleString()}.00
                   </span>
                 )}
-                {activeVariant.regularPrice && (
+                {!isCurrentVariantInStock ? (
+                  <span className="text-xs font-bold uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-xs flex items-center gap-1.5 shadow-2xs">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                    Out of Stock
+                  </span>
+                ) : activeVariant.regularPrice ? (
                   <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-xs">
                     Save Rs{(activeVariant.regularPrice - activeVariant.price).toLocaleString()}
                   </span>
-                )}
+                ) : null}
               </div>
 
               {/* Description */}
@@ -232,43 +263,72 @@ export default function ProductDetailClient({ product, relatedProducts = [] }) {
                 {product.description}
               </p>
 
-              {/* Fragrance Notes / Pyramid */}
-              {product.pyramid && (
+              {/* Fragrance Notes / Pyramid - Only shown if notes are actually provided */}
+              {product.pyramid && (product.pyramid.top?.trim() || product.pyramid.heart?.trim() || product.pyramid.base?.trim()) && (
                 <div className="p-3.5 sm:p-4 bg-stone-50 rounded-xs border border-stone-200/90 space-y-2 text-xs sm:text-sm">
                   <div className="font-bold text-stone-800 text-xs uppercase tracking-wider flex items-center gap-1.5 text-[#BC8242]">
                     <Sparkles size={14} /> Olfactory Notes
                   </div>
-                  <div className="text-stone-700">
-                    <strong className="text-stone-900">Top:</strong> {product.pyramid.top}
-                  </div>
-                  <div className="text-stone-700">
-                    <strong className="text-stone-900">Heart:</strong> {product.pyramid.heart}
-                  </div>
-                  <div className="text-stone-700">
-                    <strong className="text-stone-900">Base:</strong> {product.pyramid.base}
-                  </div>
+                  {product.pyramid.top?.trim() && (
+                    <div className="text-stone-700">
+                      <strong className="text-stone-900">Top:</strong> {product.pyramid.top}
+                    </div>
+                  )}
+                  {product.pyramid.heart?.trim() && (
+                    <div className="text-stone-700">
+                      <strong className="text-stone-900">Heart:</strong> {product.pyramid.heart}
+                    </div>
+                  )}
+                  {product.pyramid.base?.trim() && (
+                    <div className="text-stone-700">
+                      <strong className="text-stone-900">Base:</strong> {product.pyramid.base}
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* Variant Selector */}
               <div className="space-y-2 pt-1">
-                <label className="text-xs font-bold uppercase tracking-wider text-stone-800 block">
-                  Select Bottle Size / Presentation:
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wider text-stone-800">
+                    Select Bottle Size / Presentation:
+                  </label>
+                  {!isCurrentVariantInStock && (
+                    <span className="text-[11px] font-semibold text-rose-600 flex items-center gap-1">
+                      <AlertCircle size={12} /> Currently Out of Stock
+                    </span>
+                  )}
+                </div>
                 <div className="flex flex-wrap gap-2 sm:gap-2.5">
-                  {product.variants.map((v) => (
-                    <button
-                      key={v.size}
-                      onClick={() => setSelectedSize(v.size)}
-                      className={`px-4 py-2 text-xs sm:text-sm font-semibold rounded-xs border transition-all cursor-pointer ${
-                        selectedSize === v.size
-                          ? "bg-stone-900 border-stone-900 text-white shadow-xs scale-102"
-                          : "border-stone-300 bg-white text-stone-700 hover:border-stone-400 hover:bg-stone-50"
-                      }`}
-                    >
-                      {v.size} — Rs{v.price.toLocaleString()}
-                    </button>
-                  ))}
+                  {product.variants.map((v) => {
+                    const inStock = isVariantInStock(v);
+                    const isSelected = selectedSize === v.size;
+                    return (
+                      <button
+                        key={v.size}
+                        type="button"
+                        onClick={() => setSelectedSize(v.size)}
+                        className={`px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-xs border transition-all cursor-pointer flex items-center gap-2 ${
+                          isSelected
+                            ? !inStock
+                              ? "bg-stone-800 border-stone-800 text-stone-200 shadow-xs"
+                              : "bg-stone-900 border-stone-900 text-white shadow-xs scale-102"
+                            : !inStock
+                            ? "border-stone-200 bg-stone-100/90 text-stone-400 hover:border-stone-300"
+                            : "border-stone-300 bg-white text-stone-700 hover:border-stone-400 hover:bg-stone-50"
+                        }`}
+                      >
+                        <span className={!inStock && !isSelected ? "line-through text-stone-400" : ""}>
+                          {v.size} — Rs{v.price.toLocaleString()}
+                        </span>
+                        {!inStock && (
+                          <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-200">
+                            Out of Stock
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -276,9 +336,14 @@ export default function ProductDetailClient({ product, relatedProducts = [] }) {
               <div className="space-y-3 pt-2">
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   {/* Quantity Stepper */}
-                  <div className="flex items-center justify-between sm:justify-center border border-stone-300 rounded-xs bg-white px-2 py-1 shrink-0 h-12">
+                  <div
+                    className={`flex items-center justify-between sm:justify-center border border-stone-300 rounded-xs bg-white px-2 py-1 shrink-0 h-12 transition-opacity ${
+                      !isCurrentVariantInStock ? "opacity-40 pointer-events-none bg-stone-100" : ""
+                    }`}
+                  >
                     <button
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      disabled={!isCurrentVariantInStock}
                       className="px-3 py-1 text-stone-600 hover:bg-stone-100 active:bg-stone-200 transition-colors text-base font-bold cursor-pointer"
                       aria-label="Decrease quantity"
                     >
@@ -289,6 +354,7 @@ export default function ProductDetailClient({ product, relatedProducts = [] }) {
                     </span>
                     <button
                       onClick={() => setQuantity((q) => q + 1)}
+                      disabled={!isCurrentVariantInStock}
                       className="px-3 py-1 text-stone-600 hover:bg-stone-100 active:bg-stone-200 transition-colors text-base font-bold cursor-pointer"
                       aria-label="Increase quantity"
                     >
@@ -298,15 +364,23 @@ export default function ProductDetailClient({ product, relatedProducts = [] }) {
 
                   {/* Add To Cart CTA */}
                   <button
-                    onClick={handleAddToCart}
-                    disabled={addedSuccess}
-                    className={`flex-1 py-3.5 px-6 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer ${
-                      addedSuccess
-                        ? "bg-emerald-600 text-white"
-                        : "bg-[#BC8242] hover:bg-[#a66f33] active:bg-[#925c27] text-white hover:shadow-lg"
+                    onClick={isCurrentVariantInStock ? handleAddToCart : undefined}
+                    disabled={!isCurrentVariantInStock || addedSuccess}
+                    className={`flex-1 py-3.5 px-6 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md ${
+                      !isCurrentVariantInStock
+                        ? "bg-stone-200 text-stone-400 border border-stone-300 cursor-not-allowed shadow-none"
+                        : addedSuccess
+                        ? "bg-emerald-600 text-white cursor-pointer"
+                        : "bg-[#BC8242] hover:bg-[#a66f33] active:bg-[#925c27] text-white hover:shadow-lg cursor-pointer"
                     }`}
                   >
-                    {addedSuccess ? (
+                    {!isCurrentVariantInStock ? (
+                      <>
+                        <AlertCircle size={17} className="text-stone-400 shrink-0" />
+                        <span>Out of Stock</span>
+                        <span className="text-[11px] font-normal lowercase">({activeVariant.size} unavailable)</span>
+                      </>
+                    ) : addedSuccess ? (
                       <>
                         <Check size={18} /> Added To Your Cart!
                       </>
@@ -317,6 +391,25 @@ export default function ProductDetailClient({ product, relatedProducts = [] }) {
                     )}
                   </button>
                 </div>
+
+                {/* Helpful Out-of-Stock Notice */}
+                {!isCurrentVariantInStock && (
+                  <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xs text-xs text-amber-900 flex items-center justify-between gap-3 flex-wrap">
+                    <span>
+                      <strong>{activeVariant.size}</strong> is currently sold out. Please select another size variant above to order.
+                    </span>
+                    <a
+                      href={`https://wa.me/923001234567?text=${encodeURIComponent(
+                        `Hello Utoor Ate Azami! When will ${product.name} in size ${activeVariant.size} be available again?`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] font-bold text-[#BC8242] hover:underline shrink-0"
+                    >
+                      Inquire on WhatsApp →
+                    </a>
+                  </div>
+                )}
 
                 {/* Trust Guarantees */}
                 <div className="flex items-center justify-center sm:justify-start gap-5 text-xs text-stone-600 pt-3">

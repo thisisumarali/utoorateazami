@@ -18,7 +18,7 @@ export default function SearchModal({ isOpen, onClose, onSelectProduct }) {
         product.categoryDisplay.toLowerCase().includes(query.toLowerCase()) ||
         product.description.toLowerCase().includes(query.toLowerCase()) ||
         (product.inspiredBy && product.inspiredBy.toLowerCase().includes(query.toLowerCase())) ||
-        (product.pyramid && Object.values(product.pyramid).some((note) => note.toLowerCase().includes(query.toLowerCase())));
+        (product.pyramid && Object.values(product.pyramid).some((note) => typeof note === "string" && note.toLowerCase().includes(query.toLowerCase())));
 
       const matchesCat =
         selectedCategory === "all" ||

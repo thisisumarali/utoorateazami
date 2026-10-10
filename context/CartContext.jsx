@@ -23,34 +23,9 @@ export function CartProvider({ children }) {
       const saved = localStorage.getItem("utoorateazami_cart");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           setCartItems(parsed);
-        } else {
-          // Default initial item for demo presence
-          setCartItems([
-            {
-              id: "silver-oud-3ml",
-              productId: "silver-oud",
-              name: "SILVER OUD",
-              image: "https://utoorateazami.com/wp-content/uploads/2024/09/74-1024x1024.png",
-              size: "3ml",
-              price: 500,
-              quantity: 1,
-            },
-          ]);
         }
-      } else {
-        setCartItems([
-          {
-            id: "silver-oud-3ml",
-            productId: "silver-oud",
-            name: "SILVER OUD",
-            image: "https://utoorateazami.com/wp-content/uploads/2024/09/74-1024x1024.png",
-            size: "3ml",
-            price: 500,
-            quantity: 1,
-          },
-        ]);
       }
     } catch (err) {
       console.error("Failed to load cart from storage", err);
@@ -74,6 +49,10 @@ export function CartProvider({ children }) {
   };
 
   const addToCart = (newItem) => {
+    if (newItem.inStock === false || newItem.in_stock === false) {
+      showToast(`Sorry, ${newItem.name} (${newItem.size}) is currently out of stock.`);
+      return;
+    }
     setCartItems((prev) => {
       const existingIdx = prev.findIndex((i) => i.id === newItem.id);
       if (existingIdx > -1) {

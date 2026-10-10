@@ -1,14 +1,41 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { CATEGORIES } from "@/data/storeData";
 import { ArrowUpRight } from "lucide-react";
 
 export default function CategoryShowcase({ onSelectCategory }) {
+  const [categories, setCategories] = useState(CATEGORIES);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((data) => {
+        if (isMounted && data.mainCategories && data.mainCategories.length > 0) {
+          setCategories(
+            data.mainCategories.map((m) => ({
+              id: m.id,
+              name: m.name,
+              subtext: m.title || "Artisanal luxury fragrance",
+              image: m.image || "https://utoorateazami.com/wp-content/uploads/2024/08/66-1024x1024.png",
+              count: m.product_count !== undefined ? `${m.product_count} Products` : "Collection",
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-      {CATEGORIES.map((category) => (
+      {categories.map((category) => (
         <Link
           key={category.id}
           href={`/shop?category=${category.id}`}

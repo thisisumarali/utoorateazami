@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,31 +15,161 @@ import { PRODUCTS, TESTIMONIALS, SITE_CONFIG } from "@/data/storeData";
 import { useCart } from "@/context/CartContext";
 import { Star, Gift, ArrowRight } from "lucide-react";
 
+// Helper to determine product stock availability
+function checkProductStock(product) {
+  if (product.in_stock === false || product.inStock === false) return false;
+  let variants = product.variants;
+  if (typeof variants === "string") {
+    try {
+      variants = JSON.parse(variants);
+    } catch (e) {
+      variants = null;
+    }
+  }
+  if (Array.isArray(variants) && variants.length > 0) {
+    return variants.some((v) => {
+      if (!v) return false;
+      if (v.inStock === false || v.in_stock === false) return false;
+      if (v.status === "Out of Stock" || v.status === "out_of_stock") return false;
+      return true;
+    });
+  }
+  return true;
+}
+
 export default function Home() {
   const router = useRouter();
   const { addToCart } = useCart();
   const [activeCategory, setActiveCategory] = useState("all");
+  const [stockFilter, setStockFilter] = useState("all");
+
+  // Dynamic products and categories from PostgreSQL
+  const [dbProducts, setDbProducts] = useState(null);
+  const [dbCategories, setDbCategories] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      try {
+        const [catRes, prodRes] = await Promise.all([
+          fetch("/api/categories"),
+          fetch("/api/products"),
+        ]);
+        const catData = await catRes.json();
+        const prodData = await prodRes.json();
+
+        if (isMounted) {
+          const cats = catData.categories || catData.mainCategories;
+          if (Array.isArray(cats) && cats.length > 0) {
+            setDbCategories(cats);
+          }
+          if (Array.isArray(prodData.products) && prodData.products.length > 0) {
+            setDbProducts(prodData.products);
+          }
+        }
+      } catch (err) {
+        // Fallback silently to static data
+      }
+    }
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const allProducts = useMemo(() => {
+    return dbProducts && dbProducts.length > 0 ? dbProducts : PRODUCTS;
+  }, [dbProducts]);
 
   // Azamis Special (4 spotlight products for top row)
   const azamisSpecial = useMemo(() => {
-    return PRODUCTS.filter((p) => p.tags.includes("azamis-special")).slice(0, 4);
-  }, []);
+    const special = allProducts.filter((p) => {
+      const pCat = (p.category || "").toLowerCase();
+      const pTags = Array.isArray(p.tags)
+        ? p.tags.map((t) => String(t).toLowerCase())
+        : typeof p.tags === "string"
+        ? p.tags.toLowerCase().split(" ")
+        : [];
+      const pCatIds = Array.isArray(p.category_ids)
+        ? p.category_ids.map((c) => String(c).toLowerCase())
+        : [];
+      return (
+        pCat === "azamis-special" ||
+        pTags.includes("azamis-special") ||
+        pCatIds.includes("azamis-special")
+      );
+    });
+    return (special.length > 0 ? special : allProducts)
+      .slice()
+      .sort((a, b) => {
+        const stockA = checkProductStock(a) ? 1 : 0;
+        const stockB = checkProductStock(b) ? 1 : 0;
+        return stockB - stockA;
+      })
+      .slice(0, 4);
+  }, [allProducts]);
+
+  // Category Tabs
+  const defaultCategoryTabs = [
+    { id: "all", label: "All Fragrances" },
+    { id: "best-seller", label: "Best Sellers" },
+    { id: "azamis-special", label: "Azamis Special" },
+    { id: "mens", label: "Men's Attars" },
+    { id: "oud", label: "Pure Oud" },
+    { id: "unisex", label: "Unisex" },
+    { id: "gift-set", label: "Gift Sets" },
+  ];
+
+  const categoryTabs = useMemo(() => {
+    if (!dbCategories || dbCategories.length === 0) return defaultCategoryTabs;
+    const tabs = [{ id: "all", label: "All Fragrances" }];
+    dbCategories.forEach((c) => {
+      if (!tabs.some((t) => t.id === c.id)) {
+        tabs.push({ id: c.id, label: c.name });
+      }
+    });
+    return tabs;
+  }, [dbCategories]);
 
   // Filtered Catalog products
   const filteredCatalog = useMemo(() => {
-    if (activeCategory === "all") return PRODUCTS;
-    if (activeCategory === "azamis-special") {
-      return PRODUCTS.filter((p) => p.tags.includes("azamis-special"));
-    }
-    if (activeCategory === "best-seller") {
-      return PRODUCTS.filter((p) => p.tags.includes("best-seller"));
-    }
-    return PRODUCTS.filter(
-      (p) =>
-        p.category === activeCategory ||
-        p.tags.includes(activeCategory)
-    );
-  }, [activeCategory]);
+    return allProducts
+      .filter((p) => {
+        if (activeCategory !== "all") {
+          const pCat = (p.category || "").toLowerCase();
+          const pTags = Array.isArray(p.tags)
+            ? p.tags.map((t) => String(t).toLowerCase())
+            : typeof p.tags === "string"
+            ? p.tags.toLowerCase().split(" ")
+            : [];
+          const pCatIds = Array.isArray(p.category_ids)
+            ? p.category_ids.map((c) => String(c).toLowerCase())
+            : [];
+          const target = activeCategory.toLowerCase();
+
+          const matchesCategory =
+            pCat === target ||
+            pTags.includes(target) ||
+            pCatIds.includes(target);
+          if (!matchesCategory) return false;
+        }
+
+        // Stock Filter
+        if (stockFilter === "in_stock" || stockFilter === "in") {
+          if (!checkProductStock(p)) return false;
+        } else if (stockFilter === "out_of_stock" || stockFilter === "out") {
+          if (checkProductStock(p)) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        // Prioritize in-stock products first
+        const stockA = checkProductStock(a) ? 1 : 0;
+        const stockB = checkProductStock(b) ? 1 : 0;
+        return stockB - stockA;
+      });
+  }, [allProducts, activeCategory, stockFilter]);
 
   const scrollToTarget = (targetId) => {
     if (targetId.startsWith("#")) {
@@ -106,19 +236,11 @@ export default function Home() {
 
           {/* Category Filter Tabs */}
           <div className="flex items-center justify-center flex-wrap gap-1.5 sm:gap-2 mb-6 sm:mb-10 text-[11px] sm:text-xs font-semibold uppercase tracking-wider">
-            {[
-              { id: "all", label: "All Fragrances" },
-              { id: "best-seller", label: "Best Sellers" },
-              { id: "azamis-special", label: "Azamis Special" },
-              { id: "mens", label: "Men's Attars" },
-              { id: "oud", label: "Pure Oud" },
-              { id: "unisex", label: "Unisex" },
-              { id: "gift-set", label: "Gift Sets" },
-            ].map((tab) => (
+            {categoryTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveCategory(tab.id)}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-200 ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-200 cursor-pointer ${
                   activeCategory === tab.id
                     ? "bg-[#BC8242] text-white shadow-sm"
                     : "bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-200"

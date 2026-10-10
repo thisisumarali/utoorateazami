@@ -34,13 +34,12 @@ const NAV_ITEMS = [
 export default function AdminLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // If on login page, render clean layout without admin shell
   if (pathname === "/admin/login") {
     return <>{children}</>;
   }
-
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
     try {

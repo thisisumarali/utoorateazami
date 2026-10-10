@@ -101,7 +101,7 @@ export async function POST(request) {
       RETURNING *;
     `;
 
-    const res = await query(insertSql, [
+    const params = [
       orderNumber,
       customer_name,
       customer_phone,
@@ -114,17 +114,29 @@ export async function POST(request) {
       subtotal || 0,
       discount_amount || 0,
       discount_percent || 0,
-      shipping_fee || 0,
-      grand_total || subtotal,
+      shippingFee || 0,
+      grandTotal || subtotal,
       status || "Confirmed",
-    ]);
+    ];
+
+    let res;
+    try {
+      res = await query(insertSql, params);
+    } catch (insertErr) {
+      if (insertErr.code === "23505" && insertErr.message?.includes("utoor_orders_pkey")) {
+        await query("SELECT setval(pg_get_serial_sequence('utoor_orders', 'id'), COALESCE(MAX(id), 0) + 1, false) FROM utoor_orders;");
+        res = await query(insertSql, params);
+      } else {
+        throw insertErr;
+      }
+    }
 
     // Log activity
     await query(
       `INSERT INTO utoor_activity_logs (action, details, admin_email)
        VALUES ($1, $2, $3);`,
       ["ORDER_CREATED_MANUAL", `Created manual order ${orderNumber} for ${customer_name}`, "salman@utoorate.com"]
-    );
+    ).catch(() => {});
 
     return NextResponse.json({
       success: true,

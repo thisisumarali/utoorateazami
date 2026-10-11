@@ -22,9 +22,35 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-export default function ProductDetailClient({ product, relatedProducts = [] }) {
+export default function ProductDetailClient({ product: initialProduct, relatedProducts = [] }) {
   const router = useRouter();
   const { addToCart } = useCart();
+  const [product, setProduct] = useState(initialProduct);
+
+  // Keep state in sync with server props
+  useEffect(() => {
+    setProduct(initialProduct);
+  }, [initialProduct]);
+
+  // Client-side live sync directly from database with no-store cache
+  useEffect(() => {
+    if (!initialProduct?.id) return;
+    let isMounted = true;
+    fetch(`/api/products/${initialProduct.id}`, { cache: "no-store" })
+      .then((res) => {
+        if (!res.ok) return null;
+        return res.json();
+      })
+      .then((data) => {
+        if (isMounted && data?.product) {
+          setProduct(data.product);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [initialProduct?.id]);
 
   // Helper to determine if a variant is in stock
   const isVariantInStock = (v) => {

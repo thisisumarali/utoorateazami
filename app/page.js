@@ -43,20 +43,27 @@ export default function Home() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [stockFilter, setStockFilter] = useState("all");
 
-  // Dynamic products and categories from PostgreSQL
+  // Dynamic products, categories, and showcase from PostgreSQL
   const [dbProducts, setDbProducts] = useState(null);
   const [dbCategories, setDbCategories] = useState(null);
+  const [showcaseSettings, setShowcaseSettings] = useState({
+    title: "AZAMIS SPECIAL",
+    subtitle: "",
+    products: null,
+  });
 
   useEffect(() => {
     let isMounted = true;
     async function loadData() {
       try {
-        const [catRes, prodRes] = await Promise.all([
+        const [catRes, prodRes, showcaseRes] = await Promise.all([
           fetch("/api/categories", { cache: "no-store" }),
           fetch("/api/products", { cache: "no-store" }),
+          fetch("/api/showcase", { cache: "no-store" }),
         ]);
         const catData = await catRes.json();
         const prodData = await prodRes.json();
+        const showcaseData = await showcaseRes.json();
 
         if (isMounted) {
           const cats = catData.categories || catData.mainCategories;
@@ -65,6 +72,13 @@ export default function Home() {
           }
           if (Array.isArray(prodData.products) && prodData.products.length > 0) {
             setDbProducts(prodData.products);
+          }
+          if (showcaseData && showcaseData.success) {
+            setShowcaseSettings({
+              title: showcaseData.title || "AZAMIS SPECIAL",
+              subtitle: showcaseData.subtitle || "",
+              products: Array.isArray(showcaseData.products) ? showcaseData.products : null,
+            });
           }
         }
       } catch (err) {
@@ -81,8 +95,19 @@ export default function Home() {
     return dbProducts && dbProducts.length > 0 ? dbProducts : PRODUCTS;
   }, [dbProducts]);
 
-  // Azamis Special (4 spotlight products for top row)
-  const azamisSpecial = useMemo(() => {
+  // Spotlight Products (8 curated products from showcase settings or fallback)
+  const spotlightProducts = useMemo(() => {
+    if (showcaseSettings.products && showcaseSettings.products.length > 0) {
+      // Cross-reference with allProducts to ensure latest stock/price/variants data
+      const prodMap = new Map();
+      allProducts.forEach((p) => prodMap.set(p.id, p));
+
+      return showcaseSettings.products
+        .slice(0, 8)
+        .map((p) => prodMap.get(p.id) || p);
+    }
+
+    // Fallback: 8 products prioritized by special tags or catalog
     const special = allProducts.filter((p) => {
       const pCat = (p.category || "").toLowerCase();
       const pTags = Array.isArray(p.tags)
@@ -99,15 +124,20 @@ export default function Home() {
         pCatIds.includes("azamis-special")
       );
     });
-    return (special.length > 0 ? special : allProducts)
+
+    const combined = special.concat(
+      allProducts.filter((p) => !special.some((s) => s.id === p.id))
+    );
+
+    return combined
       .slice()
       .sort((a, b) => {
         const stockA = checkProductStock(a) ? 1 : 0;
         const stockB = checkProductStock(b) ? 1 : 0;
         return stockB - stockA;
       })
-      .slice(0, 4);
-  }, [allProducts]);
+      .slice(0, 8);
+  }, [allProducts, showcaseSettings.products]);
 
   // Category Tabs
   const defaultCategoryTabs = [
@@ -198,14 +228,17 @@ export default function Home() {
         {/* 1. Hero Slider with background images sliding */}
         <HeroSlider onExploreClick={scrollToTarget} />
 
-        {/* 2. AZAMIS SPECIAL SECTION */}
+        {/* 2. DYNAMIC SPOTLIGHT / SHOWCASE SECTION (Configurable from Admin Panel) */}
         <section id="azamis-special" className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12">
           {/* Centered Divider Title flanked by thin lines */}
-          <SectionHeader title="AZAMIS SPECIAL" />
+          <SectionHeader
+            title={showcaseSettings.title || "AZAMIS SPECIAL"}
+            subtitle={showcaseSettings.subtitle || undefined}
+          />
 
-          {/* 4 Clean Minimalist Product Cards in a row */}
+          {/* 8 Clean Minimalist Product Cards (2 rows of 4 on desktop, 4 rows of 2 on mobile) */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 lg:gap-8">
-            {azamisSpecial.map((product) => (
+            {spotlightProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}

@@ -138,9 +138,6 @@ export default function Navbar({
                 <span className="font-serif-luxury text-sm sm:text-base md:text-xl font-bold tracking-[0.06em] sm:tracking-[0.14em] text-stone-900 group-hover:text-[#BC8242] transition-colors uppercase whitespace-nowrap">
                   UTOORAT E AZAMI
                 </span>
-                <span className="text-[8px] sm:text-[10px] tracking-[0.2em] text-[#BC8242] uppercase font-semibold leading-none">
-                  {SITE_CONFIG.arabicName}
-                </span>
               </div>
 
             </Link>

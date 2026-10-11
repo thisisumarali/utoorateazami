@@ -75,12 +75,12 @@ export async function PUT(request, { params }) {
 
     // If image is being replaced with a different image and old image is on Cloudinary, delete old one
     if (image !== undefined && image !== current.image && current.image?.includes("res.cloudinary.com")) {
-      deleteCloudinaryImage(current.image).catch(() => {});
+      deleteCloudinaryImage(current.image).catch(() => { });
     }
 
     // If secondary_image is being replaced and old is on Cloudinary, delete old one
     if (secondary_image !== undefined && secondary_image !== current.secondary_image && current.secondary_image?.includes("res.cloudinary.com")) {
-      deleteCloudinaryImage(current.secondary_image).catch(() => {});
+      deleteCloudinaryImage(current.secondary_image).catch(() => { });
     }
 
     const fields = [];
@@ -166,7 +166,7 @@ export async function PUT(request, { params }) {
       await query(
         `UPDATE utoor_products SET ${fields.join(", ")} WHERE id = $${values.length};`,
         values
-      ).catch(() => {});
+      ).catch(() => { });
 
       if (res.rows.length === 0) {
         return NextResponse.json({ error: "Product not found" }, { status: 404 });
@@ -187,7 +187,7 @@ export async function PUT(request, { params }) {
            VALUES ($1, $2)
            ON CONFLICT (product_id, category_id) DO NOTHING;`,
           [id, catId]
-        ).catch(() => {});
+        ).catch(() => { });
       }
     }
 
@@ -196,7 +196,7 @@ export async function PUT(request, { params }) {
       `INSERT INTO utoor_activity_logs (action, details, admin_email)
        VALUES ($1, $2, $3);`,
       ["PRODUCT_UPDATED", `Updated fragrance "${updatedProduct.name}" (${id})`, "salman@utoorate.com"]
-    ).catch(() => {});
+    ).catch(() => { });
 
     return NextResponse.json({
       success: true,
@@ -219,7 +219,7 @@ export async function DELETE(request, { params }) {
       [id]
     );
 
-    await query("DELETE FROM utoor_products WHERE id = $1;", [id]).catch(() => {});
+    await query("DELETE FROM utoor_products WHERE id = $1;", [id]).catch(() => { });
 
     if (res.rows.length === 0) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
@@ -229,17 +229,17 @@ export async function DELETE(request, { params }) {
 
     // Delete product images from Cloudinary if hosted there
     if (prod.image && prod.image.includes("res.cloudinary.com")) {
-      deleteCloudinaryImage(prod.image).catch(() => {});
+      deleteCloudinaryImage(prod.image).catch(() => { });
     }
     if (prod.secondary_image && prod.secondary_image.includes("res.cloudinary.com")) {
-      deleteCloudinaryImage(prod.secondary_image).catch(() => {});
+      deleteCloudinaryImage(prod.secondary_image).catch(() => { });
     }
 
     await query(
       `INSERT INTO utoor_activity_logs (action, details, admin_email)
        VALUES ($1, $2, $3);`,
       ["PRODUCT_DELETED", `Deleted product "${prod.name}" (${id})`, "salman@utoorate.com"]
-    ).catch(() => {});
+    ).catch(() => { });
 
     return NextResponse.json({ success: true, message: `Product ${prod.name} deleted` });
   } catch (err) {

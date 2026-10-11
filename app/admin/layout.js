@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Store,
   MessageSquare,
+  Sparkles,
 } from "lucide-react";
 import { SITE_CONFIG } from "@/data/storeData";
 
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
   { label: "Products", href: "/admin/products", icon: Package },
+  { label: "Home Showcase", href: "/admin/showcase", icon: Sparkles },
   { label: "Categories", href: "/admin/categories", icon: FolderTree },
   { label: "Messages", href: "/admin/messages", icon: MessageSquare },
   { label: "Customers", href: "/admin/customers", icon: Users },

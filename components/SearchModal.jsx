@@ -179,14 +179,20 @@ export default function SearchModal({ isOpen, onClose, onSelectProduct }) {
               const saleBadge = p.sale_badge || p.saleBadge;
               const inspiredBy = p.inspired_by || p.inspiredBy;
               const categoryDisplay = p.category_display || p.categoryDisplay || "Attar";
-              const priceDisplay =
-                p.price_display ||
-                p.priceDisplay ||
-                (p.min_price && p.max_price
-                  ? p.min_price === p.max_price
-                    ? `Rs${p.min_price}`
-                    : `Rs${p.min_price} – Rs${p.max_price}`
-                  : "Rs500 – Rs2,000");
+              let min = parseFloat(p.min_price || p.minPrice) || 0;
+              let max = parseFloat(p.max_price || p.maxPrice) || min;
+              if (Array.isArray(p.variants) && p.variants.length > 0) {
+                const prs = p.variants.map((v) => parseFloat(v.price) || 0).filter((pr) => pr > 0);
+                if (prs.length > 0) {
+                  min = Math.min(...prs);
+                  max = Math.max(...prs);
+                }
+              }
+              const priceDisplay = min > 0
+                ? min === max
+                  ? `Rs${min.toLocaleString()}`
+                  : `Rs${min.toLocaleString()} – Rs${max.toLocaleString()}`
+                : (p.price_display || "Rs500 – Rs2,000");
 
               return (
                 <div

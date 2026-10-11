@@ -12,19 +12,49 @@ export default function ProductCard({
   onAddToCart,
 }) {
   const router = useRouter();
+
+  // Parse variants cleanly
   const variants = useMemo(() => {
-    if (Array.isArray(product.variants)) return product.variants;
-    if (typeof product.variants === "string") {
+    let raw = product.variants;
+    if (typeof raw === "string") {
       try {
-        return JSON.parse(product.variants);
-      } catch (e) {}
+        raw = JSON.parse(raw);
+      } catch (e) {
+        raw = [];
+      }
+    }
+    if (Array.isArray(raw) && raw.length > 0) {
+      return raw.map((v) => ({
+        size: v.size || "Standard",
+        price: parseFloat(v.price) || 0,
+        regularPrice: v.regularPrice ? parseFloat(v.regularPrice) : null,
+        inStock: v.inStock !== false && v.in_stock !== false && v.status !== "Out of Stock" && v.status !== "out_of_stock",
+      }));
+    }
+
+    const minP = parseFloat(product.min_price || product.minPrice) || 500;
+    const maxP = parseFloat(product.max_price || product.maxPrice) || minP;
+    if (minP === maxP) {
+      return [{ size: "Standard", price: minP, inStock: true }];
     }
     return [
-      { size: "3ml", price: product.min_price || product.minPrice || 500 },
-      { size: "6ml", price: 1000 },
-      { size: "12ml", price: product.max_price || product.maxPrice || 2000 },
+      { size: "3ml", price: minP, inStock: true },
+      { size: "6ml", price: Math.round(minP * 2), inStock: true },
+      { size: "12ml", price: maxP, inStock: true },
     ];
   }, [product.variants, product.min_price, product.minPrice, product.max_price, product.maxPrice]);
+
+  // Clean, guaranteed price range (e.g. "Rs400 – Rs1,600")
+  const rangeDisplay = useMemo(() => {
+    const prices = variants.map((v) => v.price).filter((p) => p > 0);
+    let min = prices.length > 0 ? Math.min(...prices) : (parseFloat(product.min_price || product.minPrice) || 500);
+    let max = prices.length > 0 ? Math.max(...prices) : (parseFloat(product.max_price || product.maxPrice) || min);
+
+    if (min === max) {
+      return `Rs${min.toLocaleString()}`;
+    }
+    return `Rs${min.toLocaleString()} – Rs${max.toLocaleString()}`;
+  }, [variants, product.min_price, product.minPrice, product.max_price, product.maxPrice]);
 
   // Helper to check stock status
   const isVariantInStock = (v) => {
@@ -41,26 +71,33 @@ export default function ProductCard({
     product.inStock === false ||
     (variants.length > 0 && variants.every((v) => !isVariantInStock(v)));
 
-  // Pick first available in-stock variant by default; fallback to first variant if all out of stock
+  // Pick first available in-stock variant by default
   const defaultVariant = useMemo(() => {
     return variants.find((v) => isVariantInStock(v)) || variants[0] || { size: "3ml", price: 500 };
   }, [variants, product.in_stock, product.inStock]);
 
   const [isHovered, setIsHovered] = useState(false);
   const [selectedSize, setSelectedSize] = useState(defaultVariant?.size || "3ml");
+  const [hasUserSelectedVariant, setHasUserSelectedVariant] = useState(false);
   const [addedAnimation, setAddedAnimation] = useState(false);
 
   // Sync selected size if default available variant changes
   useEffect(() => {
-    if (defaultVariant?.size) {
+    if (defaultVariant?.size && !hasUserSelectedVariant) {
       setSelectedSize(defaultVariant.size);
     }
-  }, [defaultVariant?.size]);
+  }, [defaultVariant?.size, hasUserSelectedVariant]);
 
   // Find active variant
   const activeVariant =
     variants.find((v) => v.size === selectedSize) || defaultVariant;
   const isCurrentVariantInStock = isVariantInStock(activeVariant);
+
+  const handleSelectSize = (e, size) => {
+    e.stopPropagation();
+    setSelectedSize(size);
+    setHasUserSelectedVariant(true);
+  };
 
   const navigateToProduct = (e) => {
     if (e) e.stopPropagation();
@@ -142,20 +179,21 @@ export default function ProductCard({
             <div className="flex items-center justify-center gap-1.5" onClick={(e) => e.stopPropagation()}>
               {variants.map((v) => {
                 const inStock = isVariantInStock(v);
+                const isSelected = selectedSize === v.size && hasUserSelectedVariant;
                 return (
                   <button
                     key={v.size}
-                    onClick={() => setSelectedSize(v.size)}
-                    className={`text-[10px] px-2 py-0.5 rounded-xs font-semibold tracking-wider transition-colors ${
-                      selectedSize === v.size
+                    onClick={(e) => handleSelectSize(e, v.size)}
+                    className={`text-[10px] px-2 py-0.5 rounded-xs font-semibold tracking-wider transition-colors cursor-pointer ${
+                      isSelected
                         ? inStock
-                          ? "bg-stone-900 text-white"
+                          ? "bg-stone-900 text-white shadow-xs"
                           : "bg-rose-900 text-rose-100"
                         : inStock
-                        ? "bg-stone-200/80 text-stone-700 hover:bg-stone-300"
+                        ? "bg-white text-stone-700 hover:bg-stone-200 border border-stone-200/80"
                         : "bg-stone-200/60 text-stone-400 line-through"
                     }`}
-                    title={inStock ? `${v.size}` : `${v.size} (Out of stock)`}
+                    title={inStock ? `${v.size} — Rs${v.price}` : `${v.size} (Out of stock)`}
                   >
                     {v.size}
                   </button>
@@ -169,7 +207,7 @@ export default function ProductCard({
             <button
               onClick={handleQuickAdd}
               disabled={addedAnimation || !isCurrentVariantInStock}
-              className={`flex-1 py-1.5 px-2 rounded-xs text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all uppercase shadow-xs ${
+              className={`flex-1 py-1.5 px-2 rounded-xs text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all uppercase shadow-xs cursor-pointer ${
                 !isCurrentVariantInStock
                   ? "bg-stone-300 text-stone-500 cursor-not-allowed border border-stone-300"
                   : addedAnimation
@@ -185,14 +223,17 @@ export default function ProductCard({
                 </>
               ) : (
                 <>
-                  <ShoppingBag size={13} /> Add To Cart
+                  <ShoppingBag size={13} />
+                  <span>
+                    {hasUserSelectedVariant ? `Add ${activeVariant.size} — Rs${activeVariant.price.toLocaleString()}` : "Add To Bag"}
+                  </span>
                 </>
               )}
             </button>
 
             <button
               onClick={navigateToProduct}
-              className="p-1.5 bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 rounded-xs transition-colors"
+              className="p-1.5 bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 rounded-xs transition-colors cursor-pointer"
               title="View Product Page"
             >
               <Eye size={15} />
@@ -219,17 +260,64 @@ export default function ProductCard({
           </div>
         )}
 
-        <div className="flex items-baseline justify-between gap-1 mt-1 sm:mt-1.5">
-          <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-stone-800 tracking-wider">
-              {product.price_display || product.priceDisplay}
-            </span>
-            {(product.original_price || product.originalPrice) && (
-              <span className="text-[10px] text-stone-400 line-through">
-                {product.original_price || product.originalPrice}
-              </span>
-            )}
+        {/* Mobile Variant Pills */}
+        {variants.length > 1 && (
+          <div className="flex sm:hidden items-center gap-1 mt-1.5 flex-wrap" onClick={(e) => e.stopPropagation()}>
+            {variants.map((v) => {
+              const inStock = isVariantInStock(v);
+              const isSelected = selectedSize === v.size && hasUserSelectedVariant;
+              return (
+                <button
+                  key={v.size}
+                  onClick={(e) => handleSelectSize(e, v.size)}
+                  className={`text-[9px] px-1.5 py-0.5 rounded-xs font-semibold tracking-wider transition-colors ${
+                    isSelected
+                      ? inStock
+                        ? "bg-stone-900 text-white"
+                        : "bg-rose-900 text-white"
+                      : inStock
+                      ? "bg-stone-100 text-stone-700 border border-stone-200"
+                      : "bg-stone-100 text-stone-400 line-through border border-stone-200"
+                  }`}
+                >
+                  {v.size}
+                </button>
+              );
+            })}
           </div>
+        )}
+
+        {/* Price Section */}
+        <div className="flex items-baseline justify-between gap-1 mt-1 sm:mt-1.5">
+          {hasUserSelectedVariant ? (
+            /* User clicked a variant: show selected variant price */
+            <div className="flex items-baseline gap-1.5 flex-wrap">
+              <span className="text-[11px] sm:text-xs md:text-sm font-bold text-[#BC8242] tracking-wider">
+                Rs{activeVariant.price.toLocaleString()}.00
+              </span>
+              {activeVariant.regularPrice && (
+                <span className="text-[10px] text-stone-400 line-through">
+                  Rs{activeVariant.regularPrice.toLocaleString()}.00
+                </span>
+              )}
+              <span className="text-[9px] font-bold text-stone-700 bg-stone-100 border border-stone-200 px-1 py-0.2 rounded-xs uppercase">
+                {activeVariant.size}
+              </span>
+            </div>
+          ) : (
+            /* Default: show guaranteed clean range (e.g. "Rs400 – Rs1,600") */
+            <div className="flex items-baseline gap-1.5 flex-wrap">
+              <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-stone-800 tracking-wider">
+                {rangeDisplay}
+              </span>
+              {(product.original_price || product.originalPrice) && (
+                <span className="text-[10px] text-stone-400 line-through">
+                  {product.original_price || product.originalPrice}
+                </span>
+              )}
+            </div>
+          )}
+
           {isProductOutOfStock && (
             <span className="text-[9px] uppercase font-bold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-xs shrink-0">
               Sold Out
@@ -240,10 +328,11 @@ export default function ProductCard({
         {/* Mobile Dedicated Touch Actions */}
         <div className="mt-2 sm:hidden flex items-center gap-1.5">
           <button
-            onClick={navigateToProduct}
+            onClick={hasUserSelectedVariant ? handleQuickAdd : navigateToProduct}
             className="flex-1 py-1.5 px-2 bg-stone-900 text-white active:bg-[#BC8242] text-[10px] font-bold uppercase tracking-wider rounded-xs flex items-center justify-center gap-1 transition-colors shadow-xs"
           >
-            <ShoppingBag size={11} /> View Product
+            <ShoppingBag size={11} />
+            <span>{hasUserSelectedVariant ? `Add ${activeVariant.size}` : "View Product"}</span>
           </button>
           <button
             onClick={navigateToProduct}

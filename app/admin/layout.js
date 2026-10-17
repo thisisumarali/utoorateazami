@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -37,6 +37,26 @@ export default function AdminLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [adminUser, setAdminUser] = useState({
+    name: "Store Admin",
+    email: "admin@utoorate.com",
+  });
+
+  useEffect(() => {
+    if (pathname === "/admin/login") return;
+    let isMounted = true;
+    fetch("/api/admin/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted && data?.user) {
+          setAdminUser(data.user);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [pathname]);
 
   // If on login page, render clean layout without admin shell
   if (pathname === "/admin/login") {
@@ -128,11 +148,22 @@ export default function AdminLayout({ children }) {
         <div className="p-4 border-t border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center font-semibold text-xs text-slate-700">
-              SA
+              {adminUser.name
+                ? adminUser.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase()
+                : "AD"}
             </div>
             <div className="overflow-hidden flex-1">
-              <div className="text-xs font-semibold text-slate-900 truncate">Salman Azami</div>
-              <div className="text-[11px] text-slate-500 truncate">salman@utoorate.com</div>
+              <div className="text-xs font-semibold text-slate-900 truncate">
+                {adminUser.name || "Administrator"}
+              </div>
+              <div className="text-[11px] text-slate-500 truncate">
+                {adminUser.email || "admin@utoorate.com"}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">

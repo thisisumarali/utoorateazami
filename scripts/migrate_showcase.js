@@ -4,7 +4,7 @@ async function migrate(dbUrl, label) {
   try {
     const pool = new Pool({
       connectionString: dbUrl,
-      ssl: dbUrl.includes('169.58.205.65') ? false : (dbUrl.includes('.supabase.') || dbUrl.includes('.neon.')),
+      ssl: dbUrl.includes('.supabase.') || dbUrl.includes('.neon.') || dbUrl.includes('ssl=true') ? { rejectUnauthorized: false } : false,
       connectionTimeoutMillis: 10000,
     });
     console.log(`Connecting to ${label}...`);
@@ -46,11 +46,12 @@ async function migrate(dbUrl, label) {
 }
 
 async function run() {
-  const coolifyUrl = 'postgresql://postgres:utooratedb123@169.58.205.65:15432/postgres';
-  const localUrl = 'postgresql://postgres:root@localhost:5432/utoorateazami';
-
-  await migrate(coolifyUrl, 'Coolify Live DB');
-  await migrate(localUrl, 'Local DB');
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) {
+    console.error("Error: DATABASE_URL is not set.");
+    return;
+  }
+  await migrate(dbUrl, 'Live Database');
 }
 
 run();

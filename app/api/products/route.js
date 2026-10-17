@@ -54,6 +54,10 @@ export async function GET(request) {
   try {
     const params = [];
     let whereClauses = [];
+
+    // Storefront only displays non-hidden products
+    whereClauses.push("(p.is_hidden IS NOT TRUE)");
+
     const stockParam = searchParams.get("stock");
     const inStockOnly = searchParams.get("in_stock") === "true";
     if (inStockOnly || stockParam === "in" || stockParam === "in_stock") {
@@ -104,6 +108,7 @@ export async function GET(request) {
         p.pyramid,
         p.variants,
         p.in_stock,
+        p.is_hidden,
         p.created_at,
         p.updated_at,
         COALESCE(

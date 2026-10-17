@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { PRODUCTS, SITE_CONFIG } from "@/data/storeData";
 import ProductDetailClient from "./ProductDetailClient";
 import { query, testDbConnection } from "@/lib/db";
+import { verifyAdminToken } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -30,6 +32,16 @@ async function getProduct(id) {
       );
       if (res.rows.length > 0) {
         const row = res.rows[0];
+
+        // Check if product is hidden
+        if (row.is_hidden) {
+          const cookieStore = await cookies();
+          const adminToken = cookieStore.get("utoor_admin_token")?.value;
+          const isAdmin = adminToken ? await verifyAdminToken(adminToken) : null;
+          if (!isAdmin) {
+            return null; // Public visitors receive 404 for hidden products
+          }
+        }
         let pyramid = row.pyramid;
         if (typeof pyramid === "string") {
           try {
@@ -120,7 +132,7 @@ async function getRelatedProducts(product) {
             '[]'::json
           ) AS category_ids
         FROM products p
-        WHERE p.id != $1
+        WHERE p.id != $1 AND (p.is_hidden IS NOT TRUE)
         ORDER BY 
           CASE WHEN p.category = $2 THEN 0 ELSE 1 END,
           p.in_stock DESC,

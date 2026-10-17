@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query, testDbConnection } from "@/lib/db";
 import { PRODUCTS } from "@/data/storeData";
+import { verifyAdminToken } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -31,6 +32,15 @@ export async function GET(request, { params }) {
 
       if (res.rows.length > 0) {
         const row = res.rows[0];
+
+        // If product is hidden, only authenticated admins may view it
+        if (row.is_hidden) {
+          const adminToken = request.cookies.get("utoor_admin_token")?.value;
+          const isAdmin = adminToken ? await verifyAdminToken(adminToken) : null;
+          if (!isAdmin) {
+            return NextResponse.json({ error: "Product not found" }, { status: 404, headers: noCacheHeaders });
+          }
+        }
         let pyramid = row.pyramid;
         if (typeof pyramid === "string") {
           try {
@@ -87,6 +97,7 @@ export async function GET(request, { params }) {
           variants: mappedVariants,
           inStock: productInStock,
           in_stock: productInStock,
+          is_hidden: row.is_hidden === true,
         };
 
         return NextResponse.json({ product: formatted }, { headers: noCacheHeaders });

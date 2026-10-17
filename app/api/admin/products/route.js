@@ -49,6 +49,11 @@ export async function GET(request) {
     const params = [];
     let whereClauses = [];
 
+    const category = searchParams.get("category");
+    const stock = searchParams.get("stock");
+    const visibility = searchParams.get("visibility");
+    const search = searchParams.get("search");
+
     if (category && category !== "ALL") {
       params.push(category);
       whereClauses.push(
@@ -60,6 +65,12 @@ export async function GET(request) {
       whereClauses.push(`p.in_stock = true`);
     } else if (stock === "out") {
       whereClauses.push(`p.in_stock = false`);
+    }
+
+    if (visibility === "visible") {
+      whereClauses.push(`(p.is_hidden IS NOT TRUE)`);
+    } else if (visibility === "hidden") {
+      whereClauses.push(`p.is_hidden = true`);
     }
 
     if (search && search.trim()) {
@@ -76,7 +87,7 @@ export async function GET(request) {
         p.id, p.name, p.category, p.category_display, p.tags, p.price_display,
         p.min_price, p.max_price, p.sale_badge, p.inspired_by, p.rating,
         p.reviews_count, p.image, p.secondary_image, p.description,
-        p.pyramid, p.variants, p.in_stock, p.created_at, p.updated_at,
+        p.pyramid, p.variants, p.in_stock, p.is_hidden, p.created_at, p.updated_at,
         COALESCE(array_agg(DISTINCT pc.category_id) FILTER (WHERE pc.category_id IS NOT NULL), '{}'::varchar[]) AS category_ids,
         COALESCE(
           json_agg(
@@ -129,6 +140,7 @@ export async function POST(request) {
       pyramid,
       variants,
       in_stock,
+      is_hidden,
       category_ids,
     } = body;
 
@@ -155,8 +167,8 @@ export async function POST(request) {
         id, name, category, category_display, tags, price_display,
         min_price, max_price, sale_badge, inspired_by, rating,
         reviews_count, image, secondary_image, description,
-        pyramid, variants, in_stock, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW())
+        pyramid, variants, in_stock, is_hidden, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW())
       RETURNING *;
     `;
 
@@ -185,6 +197,7 @@ export async function POST(request) {
         ]
       ),
       in_stock !== undefined ? in_stock : true,
+      is_hidden === true,
     ]);
 
     // 2. Insert into product_categories table
@@ -199,14 +212,14 @@ export async function POST(request) {
       }
     }
 
-    // 3. Sync to legacy utoor_products
+    // 3. Sync to legacy utoor_products (if table exists)
     await query(
       `INSERT INTO utoor_products (
         id, name, category, category_display, tags, price_display,
         min_price, max_price, sale_badge, inspired_by, rating,
         reviews_count, image, secondary_image, description,
-        pyramid, variants, in_stock, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW())
+        pyramid, variants, in_stock, is_hidden, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW())
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         category = EXCLUDED.category,
@@ -217,13 +230,14 @@ export async function POST(request) {
         max_price = EXCLUDED.max_price,
         image = EXCLUDED.image,
         description = EXCLUDED.description,
+        is_hidden = EXCLUDED.is_hidden,
         updated_at = NOW();`,
       [
         id,
         cleanName.toUpperCase(),
-        category || "attar",
-        category_display || "Attar / Luxury",
-        JSON.stringify(tags || ["attar"]),
+        category || "mens",
+        category_display || (category ? category.replace(/-/g, " ").toUpperCase() : "MEN'S"),
+        JSON.stringify(tags || [category || "mens"]),
         priceDisplay,
         min_price || 500,
         max_price || 2000,
@@ -243,6 +257,7 @@ export async function POST(request) {
           ]
         ),
         in_stock !== undefined ? in_stock : true,
+        is_hidden === true,
       ]
     ).catch(() => {});
 

@@ -13,8 +13,9 @@ async function clean(url, name) {
 }
 
 async function run() {
-  await clean('postgresql://postgres:root@localhost:5432/utoorateazami', 'Local DB');
-  await clean('postgresql://postgres:utooratedb123@169.58.205.65:15432/postgres', 'Coolify DB');
+  if (process.env.DATABASE_URL) {
+    await clean(process.env.DATABASE_URL, 'Database');
+  }
 }
 
 run();

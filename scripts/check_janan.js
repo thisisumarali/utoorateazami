@@ -2,7 +2,7 @@ const { Pool } = require('pg');
 
 async function test() {
   const coolify = new Pool({
-    connectionString: 'postgresql://postgres:utooratedb123@169.58.205.65:15432/postgres',
+    connectionString: process.env.DATABASE_URL,
     ssl: false,
   });
   try {

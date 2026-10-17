@@ -56,8 +56,9 @@ async function fixDb(connectionString, label) {
 }
 
 async function main() {
-  await fixDb('postgresql://postgres:utooratedb123@169.58.205.65:15432/postgres', 'Coolify Live DB');
-  await fixDb('postgresql://postgres:root@localhost:5432/utoorateazami', 'Local DB');
+  if (process.env.DATABASE_URL) {
+    await fixDb(process.env.DATABASE_URL, 'Database');
+  }
 }
 
 main();

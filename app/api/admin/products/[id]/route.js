@@ -63,6 +63,7 @@ export async function PUT(request, { params }) {
       pyramid,
       variants,
       in_stock,
+      is_hidden,
       category_ids,
     } = body;
 
@@ -145,6 +146,10 @@ export async function PUT(request, { params }) {
     if (in_stock !== undefined) {
       values.push(in_stock);
       fields.push(`in_stock = $${values.length}`);
+    }
+    if (is_hidden !== undefined) {
+      values.push(is_hidden === true);
+      fields.push(`is_hidden = $${values.length}`);
     }
 
     let updatedProduct = null;

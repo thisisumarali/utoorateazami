@@ -35,8 +35,9 @@ async function setup(url, name) {
 }
 
 async function run() {
-  await setup('postgresql://postgres:root@localhost:5432/utoorateazami', 'Local DB');
-  await setup('postgresql://postgres:utooratedb123@169.58.205.65:15432/postgres', 'Coolify DB');
+  if (process.env.DATABASE_URL) {
+    await setup(process.env.DATABASE_URL, 'Database');
+  }
 }
 
 run();

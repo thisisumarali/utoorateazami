@@ -14,6 +14,8 @@ import {
   XCircle,
   FolderTree,
   X,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import ImageUpload from "@/components/admin/ImageUpload";
 
@@ -22,6 +24,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [stockFilter, setStockFilter] = useState("ALL");
+  const [visibilityFilter, setVisibilityFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Categories from PostgreSQL
@@ -47,6 +50,7 @@ export default function AdminProductsPage() {
     pyramid_heart: "Taif Rose, Jasmine Petals, Cedar",
     pyramid_base: "Cambodian Oud, Ambergris, Soft Musk",
     in_stock: true,
+    is_hidden: false,
     category_ids: [],
     variants: [
       { size: "3ml", price: 500, regularPrice: 625, inStock: true },
@@ -78,6 +82,7 @@ export default function AdminProductsPage() {
       const url = new URL("/api/admin/products", window.location.origin);
       if (categoryFilter !== "ALL") url.searchParams.set("category", categoryFilter);
       if (stockFilter !== "ALL") url.searchParams.set("stock", stockFilter);
+      if (visibilityFilter !== "ALL") url.searchParams.set("visibility", visibilityFilter);
       if (searchQuery.trim()) url.searchParams.set("search", searchQuery.trim());
 
       const res = await fetch(url.toString());
@@ -96,7 +101,7 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     fetchProducts();
-  }, [categoryFilter, stockFilter]);
+  }, [categoryFilter, stockFilter, visibilityFilter]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -120,6 +125,24 @@ export default function AdminProductsPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ in_stock: newStock }),
+      });
+    } catch (err) {
+      console.error(err);
+      fetchProducts();
+    }
+  };
+
+  const handleToggleVisibility = async (product) => {
+    const newHidden = !product.is_hidden;
+    setProducts((prev) =>
+      prev.map((p) => (p.id === product.id ? { ...p, is_hidden: newHidden } : p))
+    );
+
+    try {
+      await fetch(`/api/admin/products/${product.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_hidden: newHidden }),
       });
     } catch (err) {
       console.error(err);
@@ -173,6 +196,7 @@ export default function AdminProductsPage() {
       pyramid_heart: pyramid.heart || "",
       pyramid_base: pyramid.base || "",
       in_stock: p.in_stock !== false,
+      is_hidden: p.is_hidden === true,
       category_ids: catIds,
       variants: productVariants,
     });
@@ -315,6 +339,7 @@ export default function AdminProductsPage() {
       secondary_image: formData.secondary_image,
       description: formData.description,
       in_stock: formData.in_stock,
+      is_hidden: formData.is_hidden === true,
       category_ids: categoryIds,
       pyramid: {
         top: formData.pyramid_top,
@@ -460,6 +485,45 @@ export default function AdminProductsPage() {
             </button>
           </div>
 
+          {/* Visibility Filter Buttons */}
+          <div className="inline-flex items-center p-0.5 bg-slate-100 rounded-lg border border-slate-200 text-xs">
+            <button
+              type="button"
+              onClick={() => setVisibilityFilter("ALL")}
+              className={`px-2.5 py-1 rounded-md font-medium transition cursor-pointer ${
+                visibilityFilter === "ALL"
+                  ? "bg-white text-slate-900 shadow-2xs font-semibold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              All Status
+            </button>
+            <button
+              type="button"
+              onClick={() => setVisibilityFilter("visible")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-medium transition cursor-pointer ${
+                visibilityFilter === "visible"
+                  ? "bg-slate-900 text-white shadow-2xs font-semibold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Eye className="w-3 h-3 text-emerald-400" />
+              Visible
+            </button>
+            <button
+              type="button"
+              onClick={() => setVisibilityFilter("hidden")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-medium transition cursor-pointer ${
+                visibilityFilter === "hidden"
+                  ? "bg-amber-600 text-white shadow-2xs font-semibold"
+                  : "text-slate-600 hover:text-amber-700"
+              }`}
+            >
+              <EyeOff className="w-3 h-3 text-amber-200" />
+              Hidden
+            </button>
+          </div>
+
           <span className="text-xs text-slate-500 hidden sm:inline">
             ({products.length} products)
           </span>
@@ -488,7 +552,7 @@ export default function AdminProductsPage() {
           <Package className="w-10 h-10 text-slate-300 mx-auto mb-3" />
           <h3 className="text-sm font-semibold text-slate-800">No fragrances found</h3>
           <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-            Try adjusting your search query or category filter.
+            Try adjusting your search query, visibility, or category filter.
           </p>
         </div>
       ) : (
@@ -497,11 +561,14 @@ export default function AdminProductsPage() {
             const minPrice = p.min_price || p.minPrice || 500;
             const maxPrice = p.max_price || p.maxPrice || 2000;
             const catIds = p.category_ids || [];
+            const isHidden = p.is_hidden === true;
 
             return (
               <div
                 key={p.id}
-                className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs hover:border-slate-300 transition flex flex-col justify-between"
+                className={`bg-white border rounded-xl overflow-hidden shadow-xs hover:border-slate-300 transition flex flex-col justify-between ${
+                  isHidden ? "border-amber-300 ring-1 ring-amber-300/60 bg-amber-50/15" : "border-slate-200"
+                }`}
               >
                 <div className="relative aspect-square bg-slate-100 overflow-hidden group">
                   <img
@@ -514,7 +581,31 @@ export default function AdminProductsPage() {
                       {p.sale_badge || p.saleBadge}
                     </span>
                   )}
-                  <div className="absolute top-2.5 right-2.5">
+                  <div className="absolute top-2.5 right-2.5 flex flex-col items-end gap-1.5">
+                    {/* Storefront Visibility Toggle Badge */}
+                    <button
+                      onClick={() => handleToggleVisibility(p)}
+                      title={isHidden ? "Product is HIDDEN from store. Click to show." : "Product is VISIBLE on store. Click to hide."}
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold backdrop-blur-xs flex items-center gap-1 cursor-pointer transition shadow-xs ${
+                        isHidden
+                          ? "bg-amber-600 text-white hover:bg-amber-700 ring-1 ring-amber-400"
+                          : "bg-slate-900/85 text-white hover:bg-slate-900"
+                      }`}
+                    >
+                      {isHidden ? (
+                        <>
+                          <EyeOff className="w-3 h-3 text-amber-200" />
+                          <span>Hidden</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-3 h-3 text-emerald-400" />
+                          <span>Visible</span>
+                        </>
+                      )}
+                    </button>
+
+                    {/* Stock Status Badge */}
                     <button
                       onClick={() => handleToggleStock(p)}
                       className={`px-2 py-0.5 rounded-full text-[10px] font-semibold backdrop-blur-xs flex items-center gap-1 cursor-pointer transition ${
@@ -548,6 +639,7 @@ export default function AdminProductsPage() {
                         href={`/product/${p.id}`}
                         target="_blank"
                         className="text-slate-400 hover:text-slate-700 transition"
+                        title="View Product Page"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                       </Link>
@@ -559,8 +651,15 @@ export default function AdminProductsPage() {
                       </p>
                     )}
 
-                    {/* Category Badges */}
-                    <div className="mt-2 flex flex-wrap gap-1">
+                    {/* Category & Status Badges */}
+                    <div className="mt-2 flex flex-wrap items-center gap-1">
+                      {isHidden && (
+                        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300 font-bold">
+                          <EyeOff className="w-2.5 h-2.5 text-amber-700" />
+                          <span>Hidden</span>
+                        </span>
+                      )}
+
                       <span className="inline-block text-[10px] px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200 font-semibold">
                         {p.category_display || getCategoryDisplayName(p.category)}
                       </span>
@@ -595,6 +694,21 @@ export default function AdminProductsPage() {
                     </div>
 
                     <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => handleToggleVisibility(p)}
+                        className={`p-1.5 rounded-md transition cursor-pointer ${
+                          isHidden
+                            ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                            : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                        }`}
+                        title={isHidden ? "Make visible on storefront" : "Hide from storefront"}
+                      >
+                        {isHidden ? (
+                          <EyeOff className="w-3.5 h-3.5 text-amber-700" />
+                        ) : (
+                          <Eye className="w-3.5 h-3.5 text-slate-600" />
+                        )}
+                      </button>
                       <button
                         onClick={() => handleOpenEdit(p)}
                         className="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
@@ -942,18 +1056,57 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* Stock Toggle */}
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="in_stock_checkbox"
-                  checked={formData.in_stock}
-                  onChange={(e) => setFormData({ ...formData, in_stock: e.target.checked })}
-                  className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 cursor-pointer"
-                />
-                <label htmlFor="in_stock_checkbox" className="text-xs font-semibold text-slate-700 cursor-pointer">
-                  Available in Stock
-                </label>
+              {/* Storefront Visibility & Stock Status */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                {/* Storefront Visibility (Hide Product Option) */}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <label htmlFor="hide_product_checkbox" className="text-xs font-semibold text-slate-800 flex items-center gap-1.5 cursor-pointer">
+                      {formData.is_hidden ? (
+                        <EyeOff className="w-3.5 h-3.5 text-amber-600" />
+                      ) : (
+                        <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                      )}
+                      <span>Hide Product</span>
+                    </label>
+                    <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                      {formData.is_hidden
+                        ? "Hidden from public catalog & search"
+                        : "Active & visible on storefront"}
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    id="hide_product_checkbox"
+                    checked={formData.is_hidden}
+                    onChange={(e) => setFormData({ ...formData, is_hidden: e.target.checked })}
+                    className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer mt-0.5"
+                  />
+                </div>
+
+                {/* Stock Toggle */}
+                <div className="flex items-start justify-between gap-2 border-t sm:border-t-0 sm:border-l border-slate-200 pt-2 sm:pt-0 sm:pl-3">
+                  <div>
+                    <label htmlFor="in_stock_checkbox" className="text-xs font-semibold text-slate-800 flex items-center gap-1.5 cursor-pointer">
+                      {formData.in_stock ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      ) : (
+                        <XCircle className="w-3.5 h-3.5 text-rose-500" />
+                      )}
+                      <span>In Stock</span>
+                    </label>
+                    <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                      {formData.in_stock ? "Available for ordering" : "Marked as out of stock"}
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    id="in_stock_checkbox"
+                    checked={formData.in_stock}
+                    onChange={(e) => setFormData({ ...formData, in_stock: e.target.checked })}
+                    className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer mt-0.5"
+                  />
+                </div>
               </div>
 
               {/* Modal Buttons */}

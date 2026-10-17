@@ -84,13 +84,14 @@ export async function GET() {
         p.pyramid,
         p.variants,
         p.in_stock,
+        p.is_hidden,
         COALESCE(
           array_agg(DISTINCT pc.category_id) FILTER (WHERE pc.category_id IS NOT NULL),
           '{}'::varchar[]
         ) AS category_ids
       FROM products p
       LEFT JOIN product_categories pc ON p.id = pc.product_id
-      WHERE p.id = ANY($1)
+      WHERE p.id = ANY($1) AND (p.is_hidden IS NOT TRUE)
       GROUP BY p.id;
     `,
       [productIds]

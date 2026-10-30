@@ -645,7 +645,7 @@ export default function CheckoutPage() {
                   <div key={it.id} className="pt-3 first:pt-0 flex gap-3.5 items-center">
                     <div className="relative w-14 h-14 bg-[#f7f6f2] rounded-sm overflow-hidden border border-stone-200 shrink-0">
                       <Image
-                        src={it.image}
+                        src={it.image || "/images/coming-soon-perfume.jpg"}
                         alt={it.name}
                         fill
                         sizes="56px"

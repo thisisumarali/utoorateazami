@@ -31,8 +31,8 @@ export default function AdminCategoriesPage() {
     name: "",
     slug: "",
     description: "",
-    image: "https://utoorateazami.com/wp-content/uploads/2024/08/66-1024x1024.png",
-    banner_image: "https://utoorateazami.com/wp-content/uploads/2024/08/66-1024x1024.png",
+    image: "",
+    banner_image: "",
     sort_order: 1,
     show_in_nav: "Yes",
     status: "Active",
@@ -84,8 +84,8 @@ export default function AdminCategoriesPage() {
       name: "",
       slug: "",
       description: "",
-      image: "https://utoorateazami.com/wp-content/uploads/2024/08/66-1024x1024.png",
-      banner_image: "https://utoorateazami.com/wp-content/uploads/2024/08/66-1024x1024.png",
+      image: "",
+      banner_image: "",
       sort_order: (categories.length || 0) + 1,
       show_in_nav: "Yes",
       status: "Active",
@@ -104,9 +104,8 @@ export default function AdminCategoriesPage() {
       name: cat.name || "",
       slug: cat.id || "",
       description: cat.description || cat.title || "",
-      image: cat.image || "https://utoorateazami.com/wp-content/uploads/2024/08/66-1024x1024.png",
-      banner_image:
-        cat.banner_image || cat.image || "https://utoorateazami.com/wp-content/uploads/2024/08/66-1024x1024.png",
+      image: cat.image || "",
+      banner_image: cat.banner_image || "",
       sort_order: cat.sort_order !== undefined ? cat.sort_order : 1,
       show_in_nav: cat.show_in_nav || "Yes",
       status: cat.status || "Active",
@@ -337,13 +336,14 @@ export default function AdminCategoriesPage() {
                         <img
                           src={
                             cat.image ||
-                            "https://utoorateazami.com/wp-content/uploads/2024/08/66-1024x1024.png"
+                            cat.banner_image ||
+                            "/images/coming-soon-perfume.jpg"
                           }
                           alt={cat.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.src =
-                              "https://utoorateazami.com/wp-content/uploads/2024/08/66-1024x1024.png";
+                              "/images/coming-soon-perfume.jpg";
                           }}
                         />
                       </div>

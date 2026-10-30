@@ -206,7 +206,7 @@ export default function SearchModal({ isOpen, onClose, onSelectProduct }) {
                 >
                   <div className="relative w-14 h-14 bg-[#f7f6f2] rounded-xs overflow-hidden shrink-0 border border-stone-200">
                     <Image
-                      src={p.image || "https://utoorateazami.com/wp-content/uploads/2024/09/74-1024x1024.png"}
+                      src={p.image || p.secondary_image || "/images/coming-soon-perfume.jpg"}
                       alt={p.name}
                       fill
                       sizes="56px"

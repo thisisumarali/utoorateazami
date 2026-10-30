@@ -315,7 +315,7 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="relative aspect-[4/5] bg-white rounded-xs overflow-hidden border border-stone-200 shadow-md p-4 flex items-center justify-center group">
                   <Image
-                    src="https://utoorateazami.com/wp-content/uploads/2024/03/shamekh-gs-min-600x800-1-300x300.png"
+                    src="https://res.cloudinary.com/oelbtnhb/image/upload/v1791472846/utoorateazami/products/shamekh-gift-set-primary.png"
                     alt="Shamekh Gift Set"
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 300px"
@@ -327,7 +327,7 @@ export default function Home() {
                 </div>
                 <div className="relative aspect-[4/5] bg-white rounded-xs overflow-hidden border border-stone-200 shadow-md p-4 flex items-center justify-center group">
                   <Image
-                    src="https://utoorateazami.com/wp-content/uploads/2024/03/BIDUN-ESAM-GIFT-SET-600x759-1-300x300.png"
+                    src="https://res.cloudinary.com/oelbtnhb/image/upload/v1791214116/utoorateazami/g0ooe0rzpxronwfvppgw.png"
                     alt="Bidun Esam Gift Set"
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 300px"

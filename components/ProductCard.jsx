@@ -125,6 +125,14 @@ export default function ProductCard({
     }
   };
 
+  const [imgSrc, setImgSrc] = useState(
+    product.image || product.secondary_image || "/images/coming-soon-perfume.jpg"
+  );
+
+  useEffect(() => {
+    setImgSrc(product.image || product.secondary_image || "/images/coming-soon-perfume.jpg");
+  }, [product.image, product.secondary_image]);
+
   return (
     <div
       className="group flex flex-col bg-transparent cursor-pointer transition-all duration-300 select-none"
@@ -158,13 +166,14 @@ export default function ProductCard({
         {/* Product Image with smooth hover scale */}
         <div className="relative w-full h-full p-1 sm:p-2 flex items-center justify-center">
           <Image
-            src={product.image}
+            src={imgSrc}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className={`object-contain transition-transform duration-500 ease-out p-0.5 ${
               isProductOutOfStock ? "grayscale-[20%] opacity-85" : ""
             } ${isHovered ? "scale-108" : "scale-100"}`}
+            onError={() => setImgSrc("/images/coming-soon-perfume.jpg")}
           />
         </div>
 

@@ -39,7 +39,7 @@ export default function QuickViewModal({ product, isOpen, onClose, onAddToCart }
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   // Derive guaranteed non-empty image source
-  const displayImage = activeImage || product?.image || null;
+  const displayImage = activeImage || product?.image || product?.secondary_image || product?.secondaryImage || "/images/coming-soon-perfume.jpg";
 
   // Sync state whenever active product changes
   useEffect(() => {

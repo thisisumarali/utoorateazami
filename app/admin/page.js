@@ -458,9 +458,12 @@ export default function AdminDashboardPage() {
                 >
                   <div className="w-11 h-11 rounded-lg bg-slate-100 border border-slate-200 shrink-0 overflow-hidden relative">
                     <img
-                      src={p.image || "https://utoorateazami.com/wp-content/uploads/2024/09/74-1024x1024.png"}
+                      src={p.image || p.secondary_image || "/images/coming-soon-perfume.jpg"}
                       alt={p.name}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = "/images/coming-soon-perfume.jpg";
+                      }}
                     />
                   </div>
                   <div className="flex-1 min-w-0">

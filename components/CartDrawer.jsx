@@ -391,7 +391,7 @@ export default function CartDrawer({
                         <div key={item.id} className="flex gap-3.5 pt-3.5 first:pt-0 items-center">
                           <div className="relative w-16 h-16 bg-[#f7f6f2] rounded-xs overflow-hidden border border-stone-200 shrink-0">
                             <Image
-                              src={item.image}
+                              src={item.image || "/images/coming-soon-perfume.jpg"}
                               alt={item.name}
                               fill
                               sizes="64px"

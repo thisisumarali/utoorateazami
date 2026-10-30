@@ -43,7 +43,7 @@ export default function AdminProductsPage() {
     max_price: 2000,
     sale_badge: "",
     inspired_by: "",
-    image: "https://utoorateazami.com/wp-content/uploads/2024/09/74-1024x1024.png",
+    image: "",
     secondary_image: "",
     description: "",
     pyramid_top: "Fresh Bergamot, Royal Citrus",
@@ -572,9 +572,12 @@ export default function AdminProductsPage() {
               >
                 <div className="relative aspect-square bg-slate-100 overflow-hidden group">
                   <img
-                    src={p.image || "https://utoorateazami.com/wp-content/uploads/2024/09/74-1024x1024.png"}
+                    src={p.image || p.secondary_image || "/images/coming-soon-perfume.jpg"}
                     alt={p.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/coming-soon-perfume.jpg";
+                    }}
                   />
                   {(p.sale_badge || p.saleBadge) && (
                     <span className="absolute top-2.5 left-2.5 bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs uppercase tracking-wider">

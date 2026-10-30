@@ -74,7 +74,7 @@ export async function POST(request) {
       .replace(/^-|-$/g, "");
 
     const id = rawSlug || `cat-${Date.now()}`;
-    const catImage = image?.trim() || "https://utoorateazami.com/wp-content/uploads/2024/08/66-1024x1024.png";
+    const catImage = image?.trim() || banner_image?.trim() || "/images/coming-soon-perfume.jpg";
     const catBanner = banner_image?.trim() || catImage;
     const catDesc = description?.trim() || cleanName;
     const catSort = parseInt(sort_order, 10) || 1;

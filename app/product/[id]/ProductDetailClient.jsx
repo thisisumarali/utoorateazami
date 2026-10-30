@@ -95,7 +95,7 @@ export default function ProductDetailClient({ product: initialProduct, relatedPr
 
   if (!product) return null;
 
-  const displayImage = activeImage || product.image;
+  const displayImage = activeImage || product.image || product.secondary_image || product.secondaryImage || "/images/coming-soon-perfume.jpg";
   const activeVariant =
     product.variants.find((v) => v.size === selectedSize) || product.variants[0];
   const isCurrentVariantInStock = isVariantInStock(activeVariant);
@@ -179,6 +179,7 @@ export default function ProductDetailClient({ product: initialProduct, relatedPr
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     className="object-cover transition-transform duration-500 ease-out group-hover/zoom:scale-105"
                     priority
+                    onError={() => setActiveImage("/images/coming-soon-perfume.jpg")}
                   />
                 )}
 
